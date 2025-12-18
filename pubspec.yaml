@@ -1,0 +1,73 @@
+name: SenyaMatika
+description: "SenyaMatika Mathematics Learning App"
+publish_to: 'none'
+
+version: 1.0.0+1
+
+environment:
+  sdk: ^3.9.2
+
+dependencies:
+  flutter:
+    sdk: flutter
+  video_player: ^2.8.2
+  cupertino_icons: ^1.0.8
+
+dev_dependencies:
+  flutter_test:
+    sdk: flutter
+  flutter_lints: ^5.0.0
+  flutter_launcher_icons: ^0.14.4
+
+flutter_launcher_icons:
+  android: true
+  ios: true
+  image_path: "applogo.png"
+
+flutter:
+  uses-material-design: true
+  assets:
+    - applogo.png
+    - assets/assetsmyimage.png
+    - assets/images/
+    - assets/videos/
+    - assets/images/fraction.png
+    - assets/images/fundamental operations.png
+    - assets/images/number values logo.png
+    - assets/images/decimal numbers.png
+    - assets/images/percentage.png
+    - assets/images/mensuration.png
+    - assets/images/money_100.png
+    - assets/videos/CountUpTo20.mp4
+    - assets/images/fsl_1.png
+    - assets/images/fsl_2.png
+    - assets/images/fsl_3.png
+    - assets/images/fsl_4.png
+    - assets/images/fsl_5.png
+    - assets/images/fsl_6.png
+    - assets/images/fsl_7.png
+    - assets/images/fsl_8.png
+    - assets/images/fsl_9.png
+    - assets/videos/fsl_10.mp4
+    - assets/videos/fsl_11.mp4
+    - assets/videos/fsl_12.mp4
+    - assets/videos/fsl_13.mp4
+    - assets/videos/fsl_14.mp4
+    - assets/videos/fsl_15.mp4
+    - assets/videos/fsl_16.mp4
+    - assets/videos/fsl_17.mp4
+    - assets/videos/fsl_18.mp4
+    - assets/videos/fsl_19.mp4
+    - assets/videos/fsl_20.mp4
+    - assets/videos/fraction_asl.mp4
+    - assets/videos/fraction_fsl.mp4
+    - assets/videos/heavy_asl.mp4
+    - assets/videos/height_asl.mp4
+    - assets/videos/length_asl.mp4
+    - assets/videos/sizes_asl.mp4
+
+  fonts:
+    - family: LondrinaSolid
+      fonts:
+        - asset: assets/fonts/Londrina Solid Regular.ttf
+
