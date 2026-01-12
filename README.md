@@ -2,7 +2,7 @@
 
 Project Overview
 
-SenyaMatika is an innovative educational Flutter application designed to make learning mathematics fun and engaging. The app provides interactive lessons, quizzes, progress tracking, and sign language support to help students master mathematical concepts.
+SenyaMatika is an innovative educational Flutter application designed to make learning mathematics fun and engaging. The app provides interactive lessons, progress tracking, and sign language support to help students master mathematical concepts.
 
 # Features
 
@@ -13,8 +13,6 @@ Core Features
 - Sign Language Avatar: Real-time speech-to-sign language translation
 
 - Progress Tracking: Monitor learning progress with detailed analytics
-
-- Quiz System: Test knowledge with various quiz formats
 
 - Sign Language Dictionary: Learn sign language for mathematical terms
 
