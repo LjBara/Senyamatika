@@ -1,4 +1,4 @@
-name: SenyaMatika
+name: senyamatika_
 description: "SenyaMatika Mathematics Learning App"
 publish_to: 'none'
 
@@ -12,7 +12,10 @@ dependencies:
     sdk: flutter
   video_player: ^2.8.2
   cupertino_icons: ^1.0.8
-
+  speech_to_text: ^7.3.0
+  permission_handler: ^11.0.1
+  google_fonts: ^6.3.3
+  
 dev_dependencies:
   flutter_test:
     sdk: flutter
@@ -65,7 +68,7 @@ flutter:
     - assets/videos/height_asl.mp4
     - assets/videos/length_asl.mp4
     - assets/videos/sizes_asl.mp4
-
+    - assets/images/avatar.png
   fonts:
     - family: LondrinaSolid
       fonts:
