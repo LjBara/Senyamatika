@@ -1,4 +1,5 @@
-// 👇 IDAGDAG ITO SA PINAKATAAS
+// ----------------- Project-level build.gradle.kts -----------------
+
 buildscript {
     repositories {
         google()
@@ -7,11 +8,10 @@ buildscript {
     dependencies {
         classpath("com.android.tools.build:gradle:7.3.0")
         classpath("org.jetbrains.kotlin:kotlin-gradle-plugin:1.7.10")
-        classpath("com.google.gms:google-services:4.4.0")  // 👈 IMPORTANTE ITO
+        classpath("com.google.gms:google-services:4.4.4") // <- update version para latest stable
     }
 }
 
-// 👇 ITO NA ANG EXISTING CODE MO
 allprojects {
     repositories {
         google()
@@ -19,6 +19,7 @@ allprojects {
     }
 }
 
+// Optional: customize build directories
 val newBuildDir: Directory =
     rootProject.layout.buildDirectory
         .dir("../../build")
@@ -28,11 +29,10 @@ rootProject.layout.buildDirectory.value(newBuildDir)
 subprojects {
     val newSubprojectBuildDir: Directory = newBuildDir.dir(project.name)
     project.layout.buildDirectory.value(newSubprojectBuildDir)
-}
-subprojects {
     project.evaluationDependsOn(":app")
 }
 
+// Clean task
 tasks.register<Delete>("clean") {
     delete(rootProject.layout.buildDirectory)
 }
