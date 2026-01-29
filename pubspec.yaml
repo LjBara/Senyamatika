@@ -1,4 +1,4 @@
-name: senyamatika_
+name: senyamatika_math_app
 description: "SenyaMatika Mathematics Learning App"
 publish_to: 'none'
 
@@ -10,12 +10,14 @@ environment:
 dependencies:
   flutter:
     sdk: flutter
-  video_player: ^2.8.2
+  video_player: ^2.5.1
   cupertino_icons: ^1.0.8
   speech_to_text: ^7.3.0
   permission_handler: ^11.0.1
-  google_fonts: ^6.3.3
-  
+  shared_preferences: ^2.2.2
+  google_fonts: ^5.0.0
+  google_sign_in: ^6.1.5
+
 dev_dependencies:
   flutter_test:
     sdk: flutter
@@ -42,15 +44,6 @@ flutter:
     - assets/images/mensuration.png
     - assets/images/money_100.png
     - assets/videos/CountUpTo20.mp4
-    - assets/images/fsl_1.png
-    - assets/images/fsl_2.png
-    - assets/images/fsl_3.png
-    - assets/images/fsl_4.png
-    - assets/images/fsl_5.png
-    - assets/images/fsl_6.png
-    - assets/images/fsl_7.png
-    - assets/images/fsl_8.png
-    - assets/images/fsl_9.png
     - assets/videos/fsl_10.mp4
     - assets/videos/fsl_11.mp4
     - assets/videos/fsl_12.mp4
@@ -69,8 +62,24 @@ flutter:
     - assets/videos/length_asl.mp4
     - assets/videos/sizes_asl.mp4
     - assets/images/avatar.png
+    - assets/images/child_hello.png
+    - assets/gif/sign-language.gif
+    - assets/gif/TopicsLogo.gif
+    - assets/gif/dictionary.gif
+    - assets/gif/to-do-list.gif
+    - assets/images/to-do-list.png
+    - assets/images/sign-language.png
+    - assets/images/dictionary.png
+    - assets/images/topics.png
+    - assets/videos/avatar.mp4
+    - assets/images/hello.png
   fonts:
     - family: LondrinaSolid
       fonts:
         - asset: assets/fonts/Londrina Solid Regular.ttf
-
+    - family: LondrinaShadow 
+      fonts:
+        - asset: assets/fonts/LondrinaShadow-Regular.ttf 
+    - family: TitanOne-Regular
+      fonts:
+        - asset: assets/fonts/TitanOne-Regular.ttf
