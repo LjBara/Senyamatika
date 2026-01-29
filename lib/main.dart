@@ -60,7 +60,7 @@ class SenyaMatikaApp extends StatelessWidget {
       debugShowCheckedModeBanner: false,
       title: 'SenyaMatika',
       theme: ThemeData(
-        fontFamily: 'LondrinaSolid',
+        fontFamily: 'TitanOne-Regular',
         primaryColor: Colors.yellow[600],
       ),
       home: const SplashScreen(),
@@ -92,7 +92,7 @@ class _SplashScreenState extends State<SplashScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: const Color(0xFFF2E9B8),
+      backgroundColor: const Color(0xFF4988C4),
       body: Center(
         child: Column(
           mainAxisAlignment: MainAxisAlignment.center,
@@ -107,7 +107,7 @@ class _SplashScreenState extends State<SplashScreen> {
               style: TextStyle(
                 fontSize: 36,
                 fontWeight: FontWeight.bold,
-                fontFamily: 'LondrinaSolid',
+                fontFamily: 'TitanOne-Regular',
               ),
             ),
           ],
@@ -118,96 +118,309 @@ class _SplashScreenState extends State<SplashScreen> {
 }
 
 // ============ FRONT PAGE SCREEN ============
-class FrontPageScreen extends StatelessWidget {
+class FrontPageScreen extends StatefulWidget {
   const FrontPageScreen({super.key});
 
   @override
+  State<FrontPageScreen> createState() => _FrontPageScreenState();
+}
+
+class _FrontPageScreenState extends State<FrontPageScreen>
+    with SingleTickerProviderStateMixin {
+  late AnimationController _controller;
+  late Animation<Offset> _slideAnimation;
+  late Animation<double> _fadeAnimation;
+
+  @override
+  void initState() {
+    super.initState();
+    
+    // Initialize animation controller
+    _controller = AnimationController(
+      vsync: this,
+      duration: const Duration(milliseconds: 800),
+    );
+    
+    // Create slide animation (slides up from bottom)
+    _slideAnimation = Tween<Offset>(
+      begin: const Offset(0, 1.0), // Start from bottom (off-screen)
+      end: Offset.zero, // End at normal position
+    ).animate(
+      CurvedAnimation(
+        parent: _controller,
+        curve: Curves.easeOutBack,
+      ),
+    );
+    
+    // Create fade animation
+    _fadeAnimation = Tween<double>(
+      begin: 0.0,
+      end: 1.0,
+    ).animate(
+      CurvedAnimation(
+        parent: _controller,
+        curve: Curves.easeInOut,
+      ),
+    );
+    
+    // Delay the animation by 1 second (1000ms) then start
+    Future.delayed(const Duration(milliseconds: 1500), () {
+      if (mounted) {
+        _controller.forward();
+      }
+    });
+  }
+
+  @override
+  void dispose() {
+    _controller.dispose();
+    super.dispose();
+  }
+
+  @override
   Widget build(BuildContext context) {
+    final screenHeight = MediaQuery.of(context).size.height;
+    final screenWidth = MediaQuery.of(context).size.width;
+    final isSmallScreen = screenWidth < 360;
+    final isVerySmallScreen = screenHeight < 600;
+    final isTablet = screenWidth > 600;
+
     return Scaffold(
-      backgroundColor: const Color(0xFFF2E9B8),
-      body: Center(
-        child: Column(
-          mainAxisAlignment: MainAxisAlignment.center,
+      backgroundColor: const Color(0xFF4988C4),
+      body: SafeArea(
+        child: Stack(
           children: [
-            Image(
-              image: const AssetImage('assets/assetsmyimage.png'),
-              height: 250,
-              fit: BoxFit.contain,
-            ),
-            const SizedBox(height: 30),
-            const Text(
-              'Senyamatika',
-              style: TextStyle(
-                fontSize: 48,
-                fontWeight: FontWeight.bold,
-                fontFamily: 'LondrinaSolid',
-                color: Colors.black,
-              ),
-            ),
-            const SizedBox(height: 80),
-            SizedBox(
-              width: 250,
-              child: ElevatedButton(
-                style: ElevatedButton.styleFrom(
-                  backgroundColor: const Color(0xFFFFF59D),
-                  foregroundColor: Colors.black,
-                  minimumSize: const Size(250, 60),
-                  elevation: 3,
-                  shape: RoundedRectangleBorder(
-                    borderRadius: BorderRadius.circular(7),
-                    side: const BorderSide(
-                      color: Colors.black,
-                      width: 1,
-                      strokeAlign: BorderSide.strokeAlignOutside,
+            Column(
+              children: [
+                // TITLE SECTION - Moved lower
+                Padding(
+                  padding: EdgeInsets.only(
+                    top: isVerySmallScreen 
+                        ? screenHeight * 0.12 
+                        : screenHeight * 0.15,
+                  ),
+                  child: Center(
+                    child: Stack(
+                      children: [
+                        // BORDER/STROKE TEXT
+                        Text(
+                          'SenyaMatika',
+                          style: TextStyle(
+                            fontSize: isVerySmallScreen
+                                ? 34
+                                : isTablet
+                                    ? 56
+                                    : 44,
+                            fontWeight: FontWeight.bold,
+                            fontFamily: 'TitanOne-Regular',
+                            letterSpacing: 1.2,
+                            foreground: Paint()
+                              ..style = PaintingStyle.stroke
+                              ..strokeWidth = 1.2
+                              ..color = Colors.black,
+                          ),
+                        ),
+                        // MAIN TEXT
+                        Text(
+                          'SenyaMatika',
+                          style: TextStyle(
+                            fontSize: isVerySmallScreen
+                                ? 34
+                                : isTablet
+                                    ? 56
+                                    : 44,
+                            fontWeight: FontWeight.bold,
+                            fontFamily: 'TitanOne-Regular',
+                            color: Colors.white,
+                            letterSpacing: 1.2,
+                          ),
+                        ),
+                      ],
                     ),
                   ),
                 ),
-                onPressed: () {
-                  Navigator.push(
-                    context,
-                    MaterialPageRoute(builder: (context) => const CreateAccountScreen()),
-                  );
-                },
-                child: const Text(
-                  'Create Account',
-                  style: TextStyle(
-                    fontSize: 20,
-                    fontWeight: FontWeight.bold,
-                    fontFamily: 'LondrinaSolid',
-                  ),
-                ),
-              ),
-            ),
-            const SizedBox(height: 20),
-            SizedBox(
-              width: 250,
-              child: ElevatedButton(
-                style: ElevatedButton.styleFrom(
-                  backgroundColor: Colors.white,
-                  foregroundColor: Colors.black,
-                  minimumSize: const Size(250, 60),
-                  elevation: 3,
-                  shape: RoundedRectangleBorder(
-                    borderRadius: BorderRadius.circular(7),
-                    side: const BorderSide(
-                      color: Colors.black,
-                      width: 1,
-                      strokeAlign: BorderSide.strokeAlignOutside,
+
+                // IMAGE SECTION - Increased size
+                Expanded(
+                  child: Center(
+                    child: Padding(
+                      padding: EdgeInsets.symmetric(
+                        vertical: isVerySmallScreen ? 30 : 60,
+                        horizontal: screenWidth * 0.1,
+                      ),
+                      child: Image.asset(
+                        'assets/assetsmyimage.png',
+                        fit: BoxFit.contain,
+                        width: isVerySmallScreen
+                            ? screenWidth * 0.8
+                            : isTablet
+                                ? screenWidth * 0.6
+                                : screenWidth * 0.9,
+                        height: isVerySmallScreen
+                            ? screenWidth * 0.6
+                            : isTablet
+                                ? screenWidth * 0.4
+                                : screenWidth * 0.7,
+                        errorBuilder: (context, error, stackTrace) {
+                          return Container(
+                            width: isVerySmallScreen
+                                ? screenWidth * 0.8
+                                : isTablet
+                                    ? screenWidth * 0.6
+                                    : screenWidth * 0.9,
+                            height: isVerySmallScreen
+                                ? screenWidth * 0.6
+                                : isTablet
+                                    ? screenWidth * 0.4
+                                    : screenWidth * 0.7,
+                            color: Colors.white,
+                            child: Center(
+                              child: Icon(
+                                Icons.image,
+                                size: isSmallScreen ? 60 : 90,
+                                color: const Color(0xFF007AFF),
+                              ),
+                            ),
+                          );
+                        },
+                      ),
                     ),
                   ),
                 ),
-                onPressed: () {
-                  Navigator.push(
-                    context,
-                    MaterialPageRoute(builder: (context) => const LogInScreen()),
-                  );
-                },
-                child: const Text(
-                  'Log In',
-                  style: TextStyle(
-                    fontSize: 20,
-                    fontWeight: FontWeight.bold,
-                    fontFamily: 'LondrinaSolid',
+
+                // SPACER for the animated buttons (takes up the space)
+                SizedBox(
+                  height: isVerySmallScreen ? 170 : 200,
+                ),
+              ],
+            ),
+
+            // ANIMATED BUTTONS SECTION (will slide up)
+            Positioned(
+              bottom: 0,
+              left: 0,
+              right: 0,
+              child: SlideTransition(
+                position: _slideAnimation,
+                child: FadeTransition(
+                  opacity: _fadeAnimation,
+                  child: Container(
+                    width: double.infinity,
+                    padding: EdgeInsets.only(
+                      bottom: isVerySmallScreen ? 40 : 60,
+                      left: screenWidth * 0.1,
+                      right: screenWidth * 0.1,
+                      top: 30,
+                    ),
+                    decoration: BoxDecoration(
+                      color: Color(0xFFF5FBE6),
+                      borderRadius: const BorderRadius.only(
+                        topLeft: Radius.circular(30),
+                        topRight: Radius.circular(30),
+                      ),
+                      boxShadow: [
+                        BoxShadow(
+                          color: Colors.black.withOpacity(0.2),
+                          blurRadius: 25,
+                          spreadRadius: 5,
+                          offset: const Offset(0, -5),
+                        ),
+                      ],
+                    ),
+                    child: Column(
+                      mainAxisSize: MainAxisSize.min,
+                      children: [
+                        // CREATE ACCOUNT BUTTON
+                        SizedBox(
+                          width: double.infinity,
+                          height: isVerySmallScreen
+                              ? screenHeight * 0.07
+                              : isTablet
+                                  ? screenHeight * 0.09
+                                  : screenHeight * 0.08,
+                          child: ElevatedButton(
+                            style: ElevatedButton.styleFrom(
+                              backgroundColor: const Color(0xFFFEDA5E),
+                              foregroundColor: Colors.black,
+                              elevation: 5,
+                              shape: RoundedRectangleBorder(
+                                borderRadius: BorderRadius.circular(18),
+                                side: const BorderSide(
+                                  color: Colors.black,
+                                  width: 2.5,
+                                ),
+                              ),
+                            ),
+                            onPressed: () {
+                              Navigator.push(
+                                context,
+                                MaterialPageRoute(
+                                  builder: (context) => const CreateAccountScreen(),
+                                ),
+                              );
+                            },
+                            child: Text(
+                              'Create Account',
+                              style: TextStyle(
+                                fontSize: isVerySmallScreen
+                                    ? 17
+                                    : isTablet
+                                        ? 24
+                                        : 21,
+                                fontWeight: FontWeight.bold,
+                                fontFamily: 'TitanOne-Regular',
+                              ),
+                            ),
+                          ),
+                        ),
+
+                        SizedBox(height: isVerySmallScreen ? 18 : 25),
+
+                        // LOG IN BUTTON
+                        SizedBox(
+                          width: double.infinity,
+                          height: isVerySmallScreen
+                              ? screenHeight * 0.07
+                              : isTablet
+                                  ? screenHeight * 0.09
+                                  : screenHeight * 0.08,
+                          child: ElevatedButton(
+                            style: ElevatedButton.styleFrom(
+                              backgroundColor: const Color(0xFFD4E8FF),
+                              foregroundColor: Colors.black,
+                              elevation: 5,
+                              shape: RoundedRectangleBorder(
+                                borderRadius: BorderRadius.circular(18),
+                                side: const BorderSide(
+                                  color: Colors.black,
+                                  width: 2.5,
+                                ),
+                              ),
+                            ),
+                            onPressed: () {
+                              Navigator.push(
+                                context,
+                                MaterialPageRoute(
+                                  builder: (context) => const LogInScreen(),
+                                ),
+                              );
+                            },
+                            child: Text(
+                              'Log In',
+                              style: TextStyle(
+                                fontSize: isVerySmallScreen
+                                    ? 17
+                                    : isTablet
+                                        ? 24
+                                        : 21,
+                                fontWeight: FontWeight.bold,
+                                fontFamily: 'TitanOne-Regular',
+                              ),
+                            ),
+                          ),
+                        ),
+                      ],
+                    ),
                   ),
                 ),
               ),
@@ -262,6 +475,17 @@ class _CreateAccountScreenState extends State<CreateAccountScreen> {
       return;
     }
 
+    // DAGDAG: Validation para siguraduhing may @gmail.com ang email
+    if (!email.endsWith('@gmail.com')) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text('Please use a valid Gmail address (@gmail.com)'),
+          backgroundColor: Colors.red,
+        ),
+      );
+      return;
+    }
+
     if (password.isEmpty) {
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(
@@ -297,7 +521,7 @@ class _CreateAccountScreenState extends State<CreateAccountScreen> {
     Future.delayed(const Duration(milliseconds: 1500), () {
       Navigator.pushReplacement(
         context,
-        MaterialPageRoute(builder: (context) => const OptionSelectionScreen()),
+        MaterialPageRoute(builder: (context) => const DashboardScreen()),
       );
     });
   }
@@ -305,98 +529,235 @@ class _CreateAccountScreenState extends State<CreateAccountScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: const Color(0xFFF2E9B8),
-      appBar: AppBar(
-        backgroundColor: const Color(0xFFF2E9B8),
-        leading: IconButton(
-          icon: const Icon(Icons.arrow_back, color: Colors.black),
-          onPressed: () => Navigator.pop(context),
-        ),
-        elevation: 0,
-      ),
-      body: SingleChildScrollView(
-        padding: const EdgeInsets.all(20.0),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
+      backgroundColor: const Color(0xFFF5FBE6),
+      body: SafeArea(
+        child: Stack(
           children: [
-            const Text(
-              'Create Account',
-              style: TextStyle(
-                fontSize: 32,
-                fontWeight: FontWeight.bold,
-                fontFamily: 'LondrinaSolid',
+            // Background decorative elements
+            Positioned(
+              top: -50,
+              right: -50,
+              child: Container(
+                width: 200,
+                height: 200,
+                decoration: BoxDecoration(
+                  shape: BoxShape.circle,
+                  color: const Color(0xFFFFF59D).withOpacity(0.3),
+                ),
               ),
             ),
-            const SizedBox(height: 40),
-            
-            _buildTextField(
-              controller: _nameController,
-              label: 'Name:',
-              hintText: 'Enter your full name',
-              prefixIcon: Icons.person,
+            Positioned(
+              bottom: -100,
+              left: -50,
+              child: Container(
+                width: 250,
+                height: 250,
+                decoration: BoxDecoration(
+                  shape: BoxShape.circle,
+                  color: const Color(0xFFFFF59D).withOpacity(0.3),
+                ),
+              ),
             ),
-            const SizedBox(height: 20),
             
-            _buildTextField(
-              controller: _emailController,
-              label: 'Email/Username:',
-              hintText: 'Enter your email or username',
-              prefixIcon: Icons.email,
-              keyboardType: TextInputType.emailAddress,
-            ),
-            const SizedBox(height: 20),
-            
-            _buildPasswordField(
-              controller: _passwordController,
-              label: 'Password:',
-              hintText: 'Enter your password',
-              isPasswordVisible: _isPasswordVisible,
-              onToggleVisibility: () {
-                setState(() {
-                  _isPasswordVisible = !_isPasswordVisible;
-                });
-              },
-            ),
-            const SizedBox(height: 20),
-            
-            _buildPasswordField(
-              controller: _confirmPasswordController,
-              label: 'Confirm Password:',
-              hintText: 'Confirm your password',
-              isPasswordVisible: _isConfirmPasswordVisible,
-              onToggleVisibility: () {
-                setState(() {
-                  _isConfirmPasswordVisible = !_isConfirmPasswordVisible;
-                });
-              },
-            ),
-            const SizedBox(height: 40),
-            
-            SizedBox(
-              width: double.infinity,
-              height: 50,
-              child: ElevatedButton(
-                style: ElevatedButton.styleFrom(
-                  backgroundColor: const Color(0xFFFFF59D),
-                  foregroundColor: Colors.black,
-                  shape: RoundedRectangleBorder(
-                    borderRadius: BorderRadius.circular(7),
-                    side: const BorderSide(
-                      color: Colors.black,
-                      width: 1,
-                      strokeAlign: BorderSide.strokeAlignOutside,
+            SingleChildScrollView(
+              padding: const EdgeInsets.all(20.0),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  // Back button at top left
+                  Container(
+                    decoration: BoxDecoration(
+                      shape: BoxShape.circle,
+                      color: Colors.white,
+                      border: Border.all(color: Colors.black, width: 1),
+                    ),
+                    child: IconButton(
+                      icon: const Icon(Icons.arrow_back, color: Colors.black),
+                      onPressed: () => Navigator.pop(context),
                     ),
                   ),
-                ),
-                onPressed: _createAccount,
-                child: const Text(
-                  'Create',
-                  style: TextStyle(
-                    fontSize: 18,
-                    fontWeight: FontWeight.bold,
-                    fontFamily: 'LondrinaSolid',
+                  const SizedBox(height: 20),
+                  
+                  // Welcome text - CENTERED
+                  const Center(
+                    child: Text(
+                      'Welcome to SenyaMatika!',
+                      style: TextStyle(
+                        fontSize: 28,
+                        fontWeight: FontWeight.bold,
+                        fontFamily: 'TitanOne-Regular',
+                        color: Colors.black,
+                      ),
+                    ),
                   ),
-                ),
+                  
+                  const SizedBox(height: 30),
+                  
+                  // Container para sa Create Account text at Image
+                  SizedBox(
+                    width: double.infinity,
+                    child: Stack(
+                      children: [
+                        // "Create Account" title - NASA LEFT SIDE
+                        Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            Text(
+                              'Create',
+                              style: TextStyle(
+                                fontSize: 42,
+                                fontWeight: FontWeight.bold,
+                                fontFamily: 'TitanOne-Regular',
+                                color: Colors.black,
+                                height: 0.9,
+                              ),
+                            ),
+                            Text(
+                              'Account',
+                              style: TextStyle(
+                                fontSize: 42,
+                                fontWeight: FontWeight.bold,
+                                fontFamily: 'TitanOne-Regular',
+                                color: Colors.black,
+                                height: 0.9,
+                              ),
+                            ),
+                          ],
+                        ),
+                        
+                        // Image na nasa RIGHT SIDE
+                        Positioned(
+                          top: -10,
+                          right: 0,
+                          child: SizedBox(
+                            width: 100,
+                            height: 100,
+                            child: Image.asset(
+                              'assets/images/child_hello.png',
+                              fit: BoxFit.contain,
+                              errorBuilder: (context, error, stackTrace) {
+                                return Container(
+                                  color: Colors.transparent,
+                                  child: const Center(
+                                    child: Icon(
+                                      Icons.child_care,
+                                      size: 40,
+                                      color: Colors.black,
+                                    ),
+                                  ),
+                                );
+                              },
+                            ),
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                  
+                  const SizedBox(height: 30), // Space para sa box
+                  
+                  // Create Account card (BOX NA KULAY B0BDC1)
+                  Container(
+                    width: double.infinity,
+                    padding: const EdgeInsets.all(25),
+                    decoration: BoxDecoration(
+                      color: const Color(0xFFB0BDC1), // PINALITAN DITO
+                      borderRadius: BorderRadius.circular(20),
+                      border: Border.all(color: Colors.black, width: 2),
+                      boxShadow: [
+                        BoxShadow(
+                          color: Colors.black.withOpacity(0.1),
+                          blurRadius: 15,
+                          offset: const Offset(0, 5),
+                        ),
+                      ],
+                    ),
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        // Form fields - WALANG TITLE DITO SA LOOB
+                        _buildTextField(
+                          controller: _nameController,
+                          label: 'Name:',
+                          hintText: 'Enter your full name',
+                          prefixIcon: Icons.person,
+                        ),
+                        const SizedBox(height: 20),
+                        
+                        _buildTextField(
+                          controller: _emailController,
+                          label: 'Email:',
+                          hintText: 'Enter your Gmail address (@gmail.com)',
+                          prefixIcon: Icons.email,
+                          keyboardType: TextInputType.emailAddress,
+                        ),
+                        const SizedBox(height: 20),
+                        
+                        _buildPasswordField(
+                          controller: _passwordController,
+                          label: 'Password:',
+                          hintText: 'Enter your password',
+                          isPasswordVisible: _isPasswordVisible,
+                          onToggleVisibility: () {
+                            setState(() {
+                              _isPasswordVisible = !_isPasswordVisible;
+                            });
+                          },
+                        ),
+                        const SizedBox(height: 20),
+                        
+                        _buildPasswordField(
+                          controller: _confirmPasswordController,
+                          label: 'Confirm Password:',
+                          hintText: 'Confirm your password',
+                          isPasswordVisible: _isConfirmPasswordVisible,
+                          onToggleVisibility: () {
+                            setState(() {
+                              _isConfirmPasswordVisible = !_isConfirmPasswordVisible;
+                            });
+                          },
+                        ),
+                        const SizedBox(height: 35),
+                        
+                        // Create Button
+                        SizedBox(
+                          width: double.infinity,
+                          height: 55,
+                          child: ElevatedButton(
+                            style: ElevatedButton.styleFrom(
+                              backgroundColor: const Color(0xFFFEDA5E),
+                              foregroundColor: Colors.black,
+                              shape: RoundedRectangleBorder(
+                                borderRadius: BorderRadius.circular(12),
+                                side: const BorderSide(
+                                  color: Colors.black,
+                                  width: 2,
+                                ),
+                              ),
+                              elevation: 5,
+                              shadowColor: Colors.black.withOpacity(0.2),
+                            ),
+                            onPressed: _createAccount,
+                            child: const Text(
+                              'Create',
+                              style: TextStyle(
+                                fontSize: 20,
+                                fontWeight: FontWeight.bold,
+                                fontFamily: 'TitanOne-Regular',
+                              ),
+                            ),
+                          ),
+                        ),
+                        
+                        const SizedBox(height: 40),
+                        
+                        // TANGGAL: OR divider at Google Button
+                      ],
+                    ),
+                  ),
+                  
+                  const SizedBox(height: 40),
+                ],
               ),
             ),
           ],
@@ -420,33 +781,46 @@ class _CreateAccountScreenState extends State<CreateAccountScreen> {
           style: const TextStyle(
             fontSize: 16,
             fontWeight: FontWeight.bold,
-            fontFamily: 'LondrinaSolid',
+            fontFamily: 'TitanOne-Regular',
+            color: Colors.black,
           ),
         ),
         const SizedBox(height: 8),
         Container(
           decoration: BoxDecoration(
-            color: Colors.white,
-            borderRadius: BorderRadius.circular(7),
+            color: const Color(0xFFF8F8F8),
+            borderRadius: BorderRadius.circular(10),
             border: Border.all(
               color: Colors.black,
               width: 1,
             ),
+            boxShadow: [
+              BoxShadow(
+                color: Colors.black.withOpacity(0.05),
+                blurRadius: 5,
+                offset: const Offset(0, 2),
+              ),
+            ],
           ),
           child: TextField(
             controller: controller,
             keyboardType: keyboardType,
             decoration: InputDecoration(
-              contentPadding: const EdgeInsets.symmetric(horizontal: 12, vertical: 16),
+              contentPadding: const EdgeInsets.symmetric(horizontal: 15, vertical: 18),
               hintText: hintText,
-              hintStyle: const TextStyle(
-                fontFamily: 'LondrinaSolid',
+              hintStyle: TextStyle(
+                fontFamily: 'TitanOne-Regular',
+                color: Colors.grey[600],
               ),
               border: InputBorder.none,
               prefixIcon: Icon(prefixIcon, color: Colors.black),
+              filled: true,
+              fillColor: Colors.transparent,
             ),
             style: const TextStyle(
-              fontFamily: 'LondrinaSolid',
+              fontFamily: 'TitanOne-Regular',
+              fontSize: 16,
+              color: Colors.black,
             ),
           ),
         ),
@@ -469,27 +843,36 @@ class _CreateAccountScreenState extends State<CreateAccountScreen> {
           style: const TextStyle(
             fontSize: 16,
             fontWeight: FontWeight.bold,
-            fontFamily: 'LondrinaSolid',
+            fontFamily: 'TitanOne-Regular',
+            color: Colors.black,
           ),
         ),
         const SizedBox(height: 8),
         Container(
           decoration: BoxDecoration(
-            color: Colors.white,
-            borderRadius: BorderRadius.circular(7),
+            color: const Color(0xFFF8F8F8),
+            borderRadius: BorderRadius.circular(10),
             border: Border.all(
               color: Colors.black,
               width: 1,
             ),
+            boxShadow: [
+              BoxShadow(
+                color: Colors.black.withOpacity(0.05),
+                blurRadius: 5,
+                offset: const Offset(0, 2),
+              ),
+            ],
           ),
           child: TextField(
             controller: controller,
             obscureText: !isPasswordVisible,
             decoration: InputDecoration(
-              contentPadding: const EdgeInsets.symmetric(horizontal: 12, vertical: 16),
+              contentPadding: const EdgeInsets.symmetric(horizontal: 15, vertical: 18),
               hintText: hintText,
-              hintStyle: const TextStyle(
-                fontFamily: 'LondrinaSolid',
+              hintStyle: TextStyle(
+                fontFamily: 'TitanOne-Regular',
+                color: Colors.grey[600],
               ),
               border: InputBorder.none,
               prefixIcon: const Icon(Icons.lock, color: Colors.black),
@@ -500,9 +883,13 @@ class _CreateAccountScreenState extends State<CreateAccountScreen> {
                 ),
                 onPressed: onToggleVisibility,
               ),
+              filled: true,
+              fillColor: Colors.transparent,
             ),
             style: const TextStyle(
-              fontFamily: 'LondrinaSolid',
+              fontFamily: 'TitanOne-Regular',
+              fontSize: 16,
+              color: Colors.black,
             ),
           ),
         ),
@@ -511,7 +898,7 @@ class _CreateAccountScreenState extends State<CreateAccountScreen> {
   }
 }
 
-// ============ LOG IN SCREEN ============
+// ============ UPDATED LOG IN SCREEN ============
 class LogInScreen extends StatefulWidget {
   const LogInScreen({super.key});
 
@@ -532,7 +919,18 @@ class _LogInScreenState extends State<LogInScreen> {
     if (email.isEmpty) {
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(
-          content: Text('Please enter your email/username'),
+          content: Text('Please enter your email'),
+          backgroundColor: Colors.red,
+        ),
+      );
+      return;
+    }
+
+    // DAGDAG: Validation para siguraduhing may @gmail.com ang email
+    if (!email.endsWith('@gmail.com')) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text('Please use a valid Gmail address (@gmail.com)'),
           backgroundColor: Colors.red,
         ),
       );
@@ -566,7 +964,7 @@ class _LogInScreenState extends State<LogInScreen> {
     Future.delayed(const Duration(milliseconds: 1500), () {
       Navigator.pushReplacement(
         context,
-        MaterialPageRoute(builder: (context) => const OptionSelectionScreen()),
+        MaterialPageRoute(builder: (context) => const DashboardScreen()),
       );
     });
   }
@@ -574,108 +972,287 @@ class _LogInScreenState extends State<LogInScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: const Color(0xFFF2E9B8),
-      appBar: AppBar(
-        backgroundColor: const Color(0xFFF2E9B8),
-        leading: IconButton(
-          icon: const Icon(Icons.arrow_back, color: Colors.black),
-          onPressed: () => Navigator.pop(context),
-        ),
-        elevation: 0,
-      ),
-      body: SingleChildScrollView(
-        padding: const EdgeInsets.all(20.0),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
+      backgroundColor: const Color(0xFFF5FBE6),
+      body: SafeArea(
+        child: Stack(
           children: [
-            const SizedBox(height: 20),
-            const Text(
-              'Welcome Back!',
-              style: TextStyle(
-                fontSize: 32,
-                fontWeight: FontWeight.bold,
-                fontFamily: 'LondrinaSolid',
-              ),
-            ),
-            const SizedBox(height: 10),
-            const Text(
-              'Sign In to Continue',
-              style: TextStyle(
-                fontSize: 18,
-                fontFamily: 'LondrinaSolid',
-                color: Colors.grey,
-              ),
-            ),
-            const SizedBox(height: 40),
-            
-            _buildTextField(
-              controller: _emailController,
-              label: 'Email/Username:',
-              hintText: 'Enter your email or username',
-              prefixIcon: Icons.email,
-              keyboardType: TextInputType.emailAddress,
-            ),
-            const SizedBox(height: 20),
-            
-            _buildPasswordField(
-              controller: _passwordController,
-              label: 'Password:',
-              hintText: 'Enter your password',
-              isPasswordVisible: _isPasswordVisible,
-              onToggleVisibility: () {
-                setState(() {
-                  _isPasswordVisible = !_isPasswordVisible;
-                });
-              },
-            ),
-            const SizedBox(height: 10),
-            
-            Align(
-              alignment: Alignment.centerRight,
-              child: TextButton(
-                onPressed: () {
-                  Navigator.push(
-                    context,
-                    MaterialPageRoute(builder: (context) => const ForgotPasswordScreen()),
-                  );
-                },
-                child: const Text(
-                  'Forgot Password?',
-                  style: TextStyle(
-                    fontSize: 14,
-                    fontFamily: 'LondrinaSolid',
-                    color: Colors.blue,
-                  ),
+            // Background decorative elements (same as CreateAccountScreen)
+            Positioned(
+              top: -50,
+              right: -50,
+              child: Container(
+                width: 200,
+                height: 200,
+                decoration: BoxDecoration(
+                  shape: BoxShape.circle,
+                  color: const Color(0xFFFFF59D).withOpacity(0.3),
                 ),
               ),
             ),
-            const SizedBox(height: 40),
+            Positioned(
+              bottom: -100,
+              left: -50,
+              child: Container(
+                width: 250,
+                height: 250,
+                decoration: BoxDecoration(
+                  shape: BoxShape.circle,
+                  color: const Color(0xFFFFF59D).withOpacity(0.3),
+                ),
+              ),
+            ),
             
-            SizedBox(
-              width: double.infinity,
-              height: 50,
-              child: ElevatedButton(
-                style: ElevatedButton.styleFrom(
-                  backgroundColor: const Color(0xFFFFF59D),
-                  foregroundColor: Colors.black,
-                  shape: RoundedRectangleBorder(
-                    borderRadius: BorderRadius.circular(7),
-                    side: const BorderSide(
-                      color: Colors.black,
-                      width: 1,
-                      strokeAlign: BorderSide.strokeAlignOutside,
+            SingleChildScrollView(
+              padding: const EdgeInsets.all(20.0),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  // Back button at top left
+                  Container(
+                    decoration: BoxDecoration(
+                      shape: BoxShape.circle,
+                      color: Colors.white,
+                      border: Border.all(color: Colors.black, width: 1),
+                    ),
+                    child: IconButton(
+                      icon: const Icon(Icons.arrow_back, color: Colors.black),
+                      onPressed: () => Navigator.pop(context),
                     ),
                   ),
-                ),
-                onPressed: _logIn,
-                child: const Text(
-                  'Log In',
-                  style: TextStyle(
-                    fontSize: 18,
-                    fontWeight: FontWeight.bold,
-                    fontFamily: 'LondrinaSolid',
+                  const SizedBox(height: 20),
+                  
+                  // Welcome text - CENTERED
+                  const Center(
+                    child: Text(
+                      'Welcome Back!',
+                      style: TextStyle(
+                        fontSize: 28,
+                        fontWeight: FontWeight.bold,
+                        fontFamily: 'TitanOne-Regular',
+                        color: Colors.black,
+                      ),
+                    ),
                   ),
-                ),
+                  
+                  const SizedBox(height: 10),
+                  
+                  // Sign in text - CENTERED
+                  const Center(
+                    child: Text(
+                      'Sign In to continue',
+                      style: TextStyle(
+                        fontSize: 18,
+                        fontFamily: 'TitanOne-Regular',
+                        color: Colors.grey,
+                      ),
+                    ),
+                  ),
+                  
+                  const SizedBox(height: 30),
+                  
+                  // Container for Log In text at Image
+                  SizedBox(
+                    width: double.infinity,
+                    child: Stack(
+                      children: [
+                        // "Log In" title - LEFT SIDE
+                        Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            Text(
+                              'Log',
+                              style: TextStyle(
+                                fontSize: 42,
+                                fontWeight: FontWeight.bold,
+                                fontFamily: 'TitanOne-Regular',
+                                color: Colors.black,
+                                height: 0.9,
+                              ),
+                            ),
+                            Text(
+                              'In',
+                              style: TextStyle(
+                                fontSize: 42,
+                                fontWeight: FontWeight.bold,
+                                fontFamily: 'TitanOne-Regular',
+                                color: Colors.black,
+                                height: 0.9,
+                              ),
+                            ),
+                          ],
+                        ),
+                        
+                        // Image na nasa RIGHT SIDE (same child image)
+                        Positioned(
+                          top: -10,
+                          right: 0,
+                          child: SizedBox(
+                            width: 100,
+                            height: 100,
+                            child: Image.asset(
+                              'assets/images/child_hello.png',
+                              fit: BoxFit.contain,
+                              errorBuilder: (context, error, stackTrace) {
+                                return Container(
+                                  color: Colors.transparent,
+                                  child: const Center(
+                                    child: Icon(
+                                      Icons.child_care,
+                                      size: 40,
+                                      color: Colors.black,
+                                    ),
+                                  ),
+                                );
+                              },
+                            ),
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                  
+                  const SizedBox(height: 30),
+                  
+                  // Log In card (BOX NA KULAY B0BDC1)
+                  Container(
+                    width: double.infinity,
+                    padding: const EdgeInsets.all(25),
+                    decoration: BoxDecoration(
+                      color: const Color(0xFFB0BDC1),
+                      borderRadius: BorderRadius.circular(20),
+                      border: Border.all(color: Colors.black, width: 2),
+                      boxShadow: [
+                        BoxShadow(
+                          color: Colors.black.withOpacity(0.1),
+                          blurRadius: 15,
+                          offset: const Offset(0, 5),
+                        ),
+                      ],
+                    ),
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        // Form fields
+                        _buildTextField(
+                          controller: _emailController,
+                          label: 'Email:',
+                          hintText: 'Enter your Gmail address (@gmail.com)',
+                          prefixIcon: Icons.email,
+                          keyboardType: TextInputType.emailAddress,
+                        ),
+                        const SizedBox(height: 20),
+                        
+                        _buildPasswordField(
+                          controller: _passwordController,
+                          label: 'Password:',
+                          hintText: 'Enter your password',
+                          isPasswordVisible: _isPasswordVisible,
+                          onToggleVisibility: () {
+                            setState(() {
+                              _isPasswordVisible = !_isPasswordVisible;
+                            });
+                          },
+                        ),
+                        const SizedBox(height: 10),
+                        
+                        // Forgot Password
+                        Align(
+                          alignment: Alignment.centerRight,
+                          child: TextButton(
+                            onPressed: () {
+                              Navigator.push(
+                                context,
+                                MaterialPageRoute(builder: (context) => const ForgotPasswordScreen()),
+                              );
+                            },
+                            child: const Text(
+                              'Forgot Password?',
+                              style: TextStyle(
+                                fontSize: 14,
+                                fontFamily: 'TitanOne-Regular',
+                                color: Colors.blue,
+                              ),
+                            ),
+                          ),
+                        ),
+                        
+                        const SizedBox(height: 35),
+                        
+                        // Log In Button
+                        SizedBox(
+                          width: double.infinity,
+                          height: 55,
+                          child: ElevatedButton(
+                            style: ElevatedButton.styleFrom(
+                              backgroundColor: const Color(0xFFFEDA5E),
+                              foregroundColor: Colors.black,
+                              shape: RoundedRectangleBorder(
+                                borderRadius: BorderRadius.circular(12),
+                                side: const BorderSide(
+                                  color: Colors.black,
+                                  width: 2,
+                                ),
+                              ),
+                              elevation: 5,
+                              shadowColor: Colors.black.withOpacity(0.2),
+                            ),
+                            onPressed: _logIn,
+                            child: const Text(
+                              'Log In',
+                              style: TextStyle(
+                                fontSize: 20,
+                                fontWeight: FontWeight.bold,
+                                fontFamily: 'TitanOne-Regular',
+                              ),
+                            ),
+                          ),
+                        ),
+                        
+                        const SizedBox(height: 40),
+                        
+                        // TANGGAL: OR divider at Google Button
+                      ],
+                    ),
+                  ),
+                  
+                  const SizedBox(height: 40),
+                  
+                  // Don't have an account? Sign up
+                  Center(
+                    child: Row(
+                      mainAxisAlignment: MainAxisAlignment.center,
+                      children: [
+                        const Text(
+                          "Don't have an account? ",
+                          style: TextStyle(
+                            fontSize: 16,
+                            fontFamily: 'TitanOne-Regular',
+                            color: Colors.black87,
+                          ),
+                        ),
+                        GestureDetector(
+                          onTap: () {
+                            Navigator.push(
+                              context,
+                              MaterialPageRoute(builder: (context) => const CreateAccountScreen()),
+                            );
+                          },
+                          child: const Text(
+                            'Sign up',
+                            style: TextStyle(
+                              fontSize: 16,
+                              fontFamily: 'TitanOne-Regular',
+                              color: Colors.blue,
+                              fontWeight: FontWeight.bold,
+                            ),
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                  
+                  const SizedBox(height: 40),
+                ],
               ),
             ),
           ],
@@ -699,33 +1276,46 @@ class _LogInScreenState extends State<LogInScreen> {
           style: const TextStyle(
             fontSize: 16,
             fontWeight: FontWeight.bold,
-            fontFamily: 'LondrinaSolid',
+            fontFamily: 'TitanOne-Regular',
+            color: Colors.black,
           ),
         ),
         const SizedBox(height: 8),
         Container(
           decoration: BoxDecoration(
-            color: Colors.white,
-            borderRadius: BorderRadius.circular(7),
+            color: const Color(0xFFF8F8F8),
+            borderRadius: BorderRadius.circular(10),
             border: Border.all(
               color: Colors.black,
               width: 1,
             ),
+            boxShadow: [
+              BoxShadow(
+                color: Colors.black.withOpacity(0.05),
+                blurRadius: 5,
+                offset: const Offset(0, 2),
+              ),
+            ],
           ),
           child: TextField(
             controller: controller,
             keyboardType: keyboardType,
             decoration: InputDecoration(
-              contentPadding: const EdgeInsets.symmetric(horizontal: 12, vertical: 16),
+              contentPadding: const EdgeInsets.symmetric(horizontal: 15, vertical: 18),
               hintText: hintText,
-              hintStyle: const TextStyle(
-                fontFamily: 'LondrinaSolid',
+              hintStyle: TextStyle(
+                fontFamily: 'TitanOne-Regular',
+                color: Colors.grey[600],
               ),
               border: InputBorder.none,
               prefixIcon: Icon(prefixIcon, color: Colors.black),
+              filled: true,
+              fillColor: Colors.transparent,
             ),
             style: const TextStyle(
-              fontFamily: 'LondrinaSolid',
+              fontFamily: 'TitanOne-Regular',
+              fontSize: 16,
+              color: Colors.black,
             ),
           ),
         ),
@@ -748,27 +1338,36 @@ class _LogInScreenState extends State<LogInScreen> {
           style: const TextStyle(
             fontSize: 16,
             fontWeight: FontWeight.bold,
-            fontFamily: 'LondrinaSolid',
+            fontFamily: 'TitanOne-Regular',
+            color: Colors.black,
           ),
         ),
         const SizedBox(height: 8),
         Container(
           decoration: BoxDecoration(
-            color: Colors.white,
-            borderRadius: BorderRadius.circular(7),
+            color: const Color(0xFFF8F8F8),
+            borderRadius: BorderRadius.circular(10),
             border: Border.all(
               color: Colors.black,
               width: 1,
             ),
+            boxShadow: [
+              BoxShadow(
+                color: Colors.black.withOpacity(0.05),
+                blurRadius: 5,
+                offset: const Offset(0, 2),
+              ),
+            ],
           ),
           child: TextField(
             controller: controller,
             obscureText: !isPasswordVisible,
             decoration: InputDecoration(
-              contentPadding: const EdgeInsets.symmetric(horizontal: 12, vertical: 16),
+              contentPadding: const EdgeInsets.symmetric(horizontal: 15, vertical: 18),
               hintText: hintText,
-              hintStyle: const TextStyle(
-                fontFamily: 'LondrinaSolid',
+              hintStyle: TextStyle(
+                fontFamily: 'TitanOne-Regular',
+                color: Colors.grey[600],
               ),
               border: InputBorder.none,
               prefixIcon: const Icon(Icons.lock, color: Colors.black),
@@ -779,9 +1378,13 @@ class _LogInScreenState extends State<LogInScreen> {
                 ),
                 onPressed: onToggleVisibility,
               ),
+              filled: true,
+              fillColor: Colors.transparent,
             ),
             style: const TextStyle(
-              fontFamily: 'LondrinaSolid',
+              fontFamily: 'TitanOne-Regular',
+              fontSize: 16,
+              color: Colors.black,
             ),
           ),
         ),
@@ -790,7 +1393,7 @@ class _LogInScreenState extends State<LogInScreen> {
   }
 }
 
-// ============ FORGOT PASSWORD SCREEN ============
+// ============ UPDATED FORGOT PASSWORD SCREEN ============
 class ForgotPasswordScreen extends StatefulWidget {
   const ForgotPasswordScreen({super.key});
 
@@ -814,6 +1417,17 @@ class _ForgotPasswordScreenState extends State<ForgotPasswordScreen> {
       return;
     }
 
+    // DAGDAG: Validation para siguraduhing may @gmail.com ang email
+    if (!email.endsWith('@gmail.com')) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text('Please use a valid Gmail address (@gmail.com)'),
+          backgroundColor: Colors.red,
+        ),
+      );
+      return;
+    }
+
     ScaffoldMessenger.of(context).showSnackBar(
       const SnackBar(
         content: Text('Password reset link sent to your email!'),
@@ -830,102 +1444,243 @@ class _ForgotPasswordScreenState extends State<ForgotPasswordScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: const Color(0xFFF2E9B8),
-      appBar: AppBar(
-        backgroundColor: const Color(0xFFF2E9B8),
-        leading: IconButton(
-          icon: const Icon(Icons.arrow_back, color: Colors.black),
-          onPressed: () => Navigator.pop(context),
-        ),
-        elevation: 0,
-      ),
-      body: SingleChildScrollView(
-        padding: const EdgeInsets.all(20.0),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
+      backgroundColor: const Color(0xFFF5FBE6),
+      body: SafeArea(
+        child: Stack(
           children: [
-            const SizedBox(height: 40),
-            const Text(
-              'Forgot Password?',
-              style: TextStyle(
-                fontSize: 32,
-                fontWeight: FontWeight.bold,
-                fontFamily: 'LondrinaSolid',
+            // Background decorative elements (same as CreateAccountScreen)
+            Positioned(
+              top: -50,
+              right: -50,
+              child: Container(
+                width: 200,
+                height: 200,
+                decoration: BoxDecoration(
+                  shape: BoxShape.circle,
+                  color: const Color(0xFFFFF59D).withOpacity(0.3),
+                ),
               ),
             ),
-            const SizedBox(height: 20),
-            const Text(
-              'Enter your email address and we\'ll send you a link to reset your password.',
-              style: TextStyle(
-                fontSize: 16,
-                fontFamily: 'LondrinaSolid',
-                color: Colors.grey,
+            Positioned(
+              bottom: -100,
+              left: -50,
+              child: Container(
+                width: 250,
+                height: 250,
+                decoration: BoxDecoration(
+                  shape: BoxShape.circle,
+                  color: const Color(0xFFFFF59D).withOpacity(0.3),
+                ),
               ),
             ),
-            const SizedBox(height: 40),
             
-            Text(
-              'Enter your email address:',
-              style: const TextStyle(
-                fontSize: 16,
-                fontWeight: FontWeight.bold,
-                fontFamily: 'LondrinaSolid',
-              ),
-            ),
-            const SizedBox(height: 10),
-            Container(
-              decoration: BoxDecoration(
-                color: Colors.white,
-                borderRadius: BorderRadius.circular(7),
-                border: Border.all(
-                  color: Colors.black,
-                  width: 1,
-                ),
-              ),
-              child: TextField(
-                controller: _emailController,
-                keyboardType: TextInputType.emailAddress,
-                decoration: InputDecoration(
-                  contentPadding: const EdgeInsets.symmetric(horizontal: 12, vertical: 16),
-                  hintText: 'Your Email',
-                  hintStyle: const TextStyle(
-                    fontFamily: 'LondrinaSolid',
-                  ),
-                  border: InputBorder.none,
-                  prefixIcon: const Icon(Icons.email, color: Colors.black),
-                ),
-                style: const TextStyle(
-                  fontFamily: 'LondrinaSolid',
-                ),
-              ),
-            ),
-            const SizedBox(height: 40),
-            
-            SizedBox(
-              width: double.infinity,
-              height: 50,
-              child: ElevatedButton(
-                style: ElevatedButton.styleFrom(
-                  backgroundColor: const Color(0xFFFFF59D),
-                  foregroundColor: Colors.black,
-                  shape: RoundedRectangleBorder(
-                    borderRadius: BorderRadius.circular(7),
-                    side: const BorderSide(
-                      color: Colors.black,
-                      width: 1,
-                      strokeAlign: BorderSide.strokeAlignOutside,
+            SingleChildScrollView(
+              padding: const EdgeInsets.all(20.0),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  // Back button at top left
+                  Container(
+                    decoration: BoxDecoration(
+                      shape: BoxShape.circle,
+                      color: Colors.white,
+                      border: Border.all(color: Colors.black, width: 1),
+                    ),
+                    child: IconButton(
+                      icon: const Icon(Icons.arrow_back, color: Colors.black),
+                      onPressed: () => Navigator.pop(context),
                     ),
                   ),
-                ),
-                onPressed: _sendResetLink,
-                child: const Text(
-                  'Send',
-                  style: TextStyle(
-                    fontSize: 18,
-                    fontWeight: FontWeight.bold,
-                    fontFamily: 'LondrinaSolid',
+                  const SizedBox(height: 20),
+                  
+                  // Welcome text - CENTERED
+                  const Center(
+                    child: Text(
+                      'Forgot Password?',
+                      style: TextStyle(
+                        fontSize: 28,
+                        fontWeight: FontWeight.bold,
+                        fontFamily: 'TitanOne-Regular',
+                        color: Colors.black,
+                      ),
+                    ),
                   ),
-                ),
+                  
+                  const SizedBox(height: 10),
+                  
+                  // Instruction text - CENTERED
+                  const Center(
+                    child: Text(
+                      'Enter your Gmail to reset your password',
+                      style: TextStyle(
+                        fontSize: 18,
+                        fontFamily: 'TitanOne-Regular',
+                        color: Colors.grey,
+                      ),
+                    ),
+                  ),
+                  
+                  const SizedBox(height: 30),
+                  
+                  // Container for Forgot Password text
+                  SizedBox(
+                    width: double.infinity,
+                    child: Stack(
+                      children: [
+                        // "Forgot Password" title - LEFT SIDE
+                        Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            Text(
+                              'Forgot',
+                              style: TextStyle(
+                                fontSize: 42,
+                                fontWeight: FontWeight.bold,
+                                fontFamily: 'TitanOne-Regular',
+                                color: Colors.black,
+                                height: 0.9,
+                              ),
+                            ),
+                            Text(
+                              'Password',
+                              style: TextStyle(
+                                fontSize: 42,
+                                fontWeight: FontWeight.bold,
+                                fontFamily: 'TitanOne-Regular',
+                                color: Colors.black,
+                                height: 0.9,
+                              ),
+                            ),
+                          ],
+                        ),
+                        
+                        // Image na nasa RIGHT SIDE (same child image)
+                        Positioned(
+                          top: -10,
+                          right: 0,
+                          child: SizedBox(
+                            width: 100,
+                            height: 100,
+                            child: Image.asset(
+                              'assets/images/child_hello.png',
+                              fit: BoxFit.contain,
+                              errorBuilder: (context, error, stackTrace) {
+                                return Container(
+                                  color: Colors.transparent,
+                                  child: const Center(
+                                    child: Icon(
+                                      Icons.child_care,
+                                      size: 40,
+                                      color: Colors.black,
+                                    ),
+                                  ),
+                                );
+                              },
+                            ),
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                  
+                  const SizedBox(height: 30),
+                  
+                  // Forgot Password card (BOX NA KULAY B0BDC1 - same as others)
+                  Container(
+                    width: double.infinity,
+                    padding: const EdgeInsets.all(25),
+                    decoration: BoxDecoration(
+                      color: const Color(0xFFB0BDC1),
+                      borderRadius: BorderRadius.circular(20),
+                      border: Border.all(color: Colors.black, width: 2),
+                      boxShadow: [
+                        BoxShadow(
+                          color: Colors.black.withOpacity(0.1),
+                          blurRadius: 15,
+                          offset: const Offset(0, 5),
+                        ),
+                      ],
+                    ),
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        // Form fields
+                        _buildTextField(
+                          controller: _emailController,
+                          label: 'Gmail Address:',
+                          hintText: 'Enter your Gmail address (@gmail.com)',
+                          prefixIcon: Icons.email,
+                          keyboardType: TextInputType.emailAddress,
+                        ),
+                        const SizedBox(height: 30),
+                        
+                        // Description text
+                        const Text(
+                          'We\'ll send you a link to reset your password.',
+                          style: TextStyle(
+                            fontSize: 14,
+                            fontFamily: 'TitanOne-Regular',
+                            color: Colors.black87,
+                          ),
+                        ),
+                        
+                        const SizedBox(height: 35),
+                        
+                        // Send Reset Link Button
+                        SizedBox(
+                          width: double.infinity,
+                          height: 55,
+                          child: ElevatedButton(
+                            style: ElevatedButton.styleFrom(
+                              backgroundColor: const Color(0xFFFEDA5E),
+                              foregroundColor: Colors.black,
+                              shape: RoundedRectangleBorder(
+                                borderRadius: BorderRadius.circular(12),
+                                side: const BorderSide(
+                                  color: Colors.black,
+                                  width: 2,
+                                ),
+                              ),
+                              elevation: 5,
+                              shadowColor: Colors.black.withOpacity(0.2),
+                            ),
+                            onPressed: _sendResetLink,
+                            child: const Text(
+                              'Send Reset Link',
+                              style: TextStyle(
+                                fontSize: 20,
+                                fontWeight: FontWeight.bold,
+                                fontFamily: 'TitanOne-Regular',
+                              ),
+                            ),
+                          ),
+                        ),
+                        
+                        const SizedBox(height: 20),
+                        
+                        // Back to Log In
+                        Center(
+                          child: TextButton(
+                            onPressed: () {
+                              Navigator.pop(context);
+                            },
+                            child: const Text(
+                              'Back to Log In',
+                              style: TextStyle(
+                                fontSize: 16,
+                                fontFamily: 'TitanOne-Regular',
+                                color: Colors.blue,
+                                fontWeight: FontWeight.bold,
+                              ),
+                            ),
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                  
+                  const SizedBox(height: 40),
+                ],
               ),
             ),
           ],
@@ -933,421 +1688,674 @@ class _ForgotPasswordScreenState extends State<ForgotPasswordScreen> {
       ),
     );
   }
+
+  Widget _buildTextField({
+    required TextEditingController controller,
+    required String label,
+    required String hintText,
+    required IconData prefixIcon,
+    TextInputType keyboardType = TextInputType.text,
+  }) {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Text(
+          label,
+          style: const TextStyle(
+            fontSize: 16,
+            fontWeight: FontWeight.bold,
+            fontFamily: 'TitanOne-Regular',
+            color: Colors.black,
+          ),
+        ),
+        const SizedBox(height: 8),
+        Container(
+          decoration: BoxDecoration(
+            color: const Color(0xFFF8F8F8),
+            borderRadius: BorderRadius.circular(10),
+            border: Border.all(
+              color: Colors.black,
+              width: 1,
+            ),
+            boxShadow: [
+              BoxShadow(
+                color: Colors.black.withOpacity(0.05),
+                blurRadius: 5,
+                offset: const Offset(0, 2),
+              ),
+            ],
+          ),
+          child: TextField(
+            controller: controller,
+            keyboardType: keyboardType,
+            decoration: InputDecoration(
+              contentPadding: const EdgeInsets.symmetric(horizontal: 15, vertical: 18),
+              hintText: hintText,
+              hintStyle: TextStyle(
+                fontFamily: 'TitanOne-Regular',
+                color: Colors.grey[600],
+              ),
+              border: InputBorder.none,
+              prefixIcon: Icon(prefixIcon, color: Colors.black),
+              filled: true,
+              fillColor: Colors.transparent,
+            ),
+            style: const TextStyle(
+              fontFamily: 'TitanOne-Regular',
+              fontSize: 16,
+              color: Colors.black,
+            ),
+          ),
+        ),
+      ],
+    );
+  }
 }
 
-// ============ OPTION SELECTION SCREEN ============
-class OptionSelectionScreen extends StatelessWidget {
-  const OptionSelectionScreen({super.key});
+class DashboardScreen extends StatefulWidget {
+  const DashboardScreen({super.key});
 
   @override
-  Widget build(BuildContext context) {
-    return Scaffold(
-      backgroundColor: const Color(0xFFF2E9B8),
-      body: Center(
-        child: Column(
-          mainAxisAlignment: MainAxisAlignment.center,
-          children: [
-            const Image(
-              image: AssetImage('assets/assetsmyimage.png'),
-              height: 300,
-            ),
-            const SizedBox(height: 20),
-            const Text(
-              'SenyaMatika',
-              style: TextStyle(
-                fontSize: 36,
-                fontWeight: FontWeight.bold,
-                fontFamily: 'LondrinaSolid',
-              ),
-            ),
-            const SizedBox(height: 40),
-            
-            ElevatedButton(
-              style: ElevatedButton.styleFrom(
-                backgroundColor: const Color(0xFFFFF59D),
-                foregroundColor: Colors.black,
-                minimumSize: const Size(250, 60),
-                elevation: 3,
-                shape: RoundedRectangleBorder(
-                  borderRadius: BorderRadius.circular(7),
-                  side: const BorderSide(
+  State<DashboardScreen> createState() => _DashboardScreenState();
+}
+
+class _DashboardScreenState extends State<DashboardScreen> 
+    with TickerProviderStateMixin {
+  late AnimationController _iconAnimationController;
+  late AnimationController _featureAnimationController;
+  late Animation<double> _waveAnimation;
+  late Animation<double> _scaleAnimation;
+  late Animation<double> _rotationAnimation;
+  
+  bool _isIconTapped = false;
+  List<String> _funnyMessages = [
+    "Hi there! 👋",
+    "Hello again! ✨",
+    "You're back! 😊",
+    "Nice to see you! 🌟",
+    "Wave wave! 👋👋",
+    "Math time! 📚",
+    "Ready to learn? 🎯",
+    "Math is fun! 🧮",
+    "Super learner! 🚀"
+  ];
+  String _currentMessage = "Hello";
+
+  @override
+  void initState() {
+    super.initState();
+    
+    // Animation for features (existing)
+    _featureAnimationController = AnimationController(
+      duration: const Duration(milliseconds: 2000),
+      vsync: this,
+    )..repeat(reverse: true);
+    
+    // Animation for hello icon (NEW)
+    _iconAnimationController = AnimationController(
+      duration: const Duration(milliseconds: 1000),
+      vsync: this,
+    )..repeat(reverse: true);
+    
+    // Wave animation (hand waving)
+    _waveAnimation = Tween<double>(begin: -0.2, end: 0.2).animate(
+      CurvedAnimation(
+        parent: _iconAnimationController,
+        curve: Curves.easeInOut,
+      ),
+    );
+    
+    // Scale animation for tap effect
+    _scaleAnimation = Tween<double>(begin: 1.0, end: 1.2).animate(
+      CurvedAnimation(
+        parent: _iconAnimationController,
+        curve: Curves.easeInOut,
+      ),
+    );
+    
+    // Rotation animation for fun
+    _rotationAnimation = Tween<double>(begin: -0.1, end: 0.1).animate(
+      CurvedAnimation(
+        parent: _iconAnimationController,
+        curve: Curves.easeInOut,
+      ),
+    );
+  }
+
+  @override
+  void dispose() {
+    _iconAnimationController.dispose();
+    _featureAnimationController.dispose();
+    super.dispose();
+  }
+
+  void _handleIconTap() {
+    setState(() {
+      _isIconTapped = true;
+      
+      // Pumili lang ng random message
+      final randomIndex = Random().nextInt(_funnyMessages.length);
+      _currentMessage = _funnyMessages[randomIndex];
+    });
+    
+    // Reset tap state after animation
+    Future.delayed(const Duration(milliseconds: 300), () {
+      if (mounted) {
+        setState(() {
+          _isIconTapped = false;
+        });
+      }
+    });
+  }
+
+  Widget _buildAnimatedHelloIcon() {
+    return GestureDetector(
+      onTap: _handleIconTap,
+      onDoubleTap: () {
+        setState(() {
+          _currentMessage = "Double tap! 🎉";
+        });
+      },
+      onLongPress: () {
+        setState(() {
+          _currentMessage = "Long press! ✨";
+        });
+      },
+      child: MouseRegion(
+        cursor: SystemMouseCursors.click,
+        child: AnimatedBuilder(
+          animation: _iconAnimationController,
+          builder: (context, child) {
+            return Transform(
+              transform: Matrix4.identity()
+                ..rotateZ(_waveAnimation.value)
+                ..scale(_isIconTapped ? 1.3 : _scaleAnimation.value)
+                ..rotateY(_rotationAnimation.value * 0.5),
+              alignment: Alignment.center,
+              child: Container(
+                decoration: BoxDecoration(
+                  shape: BoxShape.circle,
+                  color: _isIconTapped ? const Color(0xFFFFF59D) : const Color(0xFFFFF59D),
+                  border: Border.all(
                     color: Colors.black,
-                    width: 1,
-                    strokeAlign: BorderSide.strokeAlignOutside,
+                    width: _isIconTapped ? 3 : 2,
                   ),
+                  boxShadow: [
+                    BoxShadow(
+                      color: _isIconTapped 
+                          ? const Color(0xFFFFD700).withOpacity(0.5)
+                          : const Color(0xFFFFF59D).withOpacity(0.3),
+                      blurRadius: _isIconTapped ? 20 : 10,
+                      spreadRadius: _isIconTapped ? 5 : 2,
+                      offset: Offset(0, _isIconTapped ? 8 : 4),
+                    ),
+                  ],
                 ),
+                padding: const EdgeInsets.all(12),
+                child: child,
               ),
-              onPressed: () {
-                Navigator.push(
-                  context,
-                  MaterialPageRoute(builder: (context) => const DashboardScreen()),
-                );
-              },
-              child: const Text(
-                'Learning Space',
-                style: TextStyle(
-                  fontSize: 20,
-                  fontWeight: FontWeight.w300,
-                  fontFamily: 'LondrinaThin',
-                  color: Color.fromARGB(255, 0, 0, 0),
-                ),
-              ),
-            ),
-            const SizedBox(height: 20),
-            
-            ElevatedButton(
-              style: ElevatedButton.styleFrom(
-                backgroundColor: Colors.white,
-                foregroundColor: Colors.black,
-                minimumSize: const Size(250, 60),
-                elevation: 3,
-                shape: RoundedRectangleBorder(
-                  borderRadius: BorderRadius.circular(7),
-                  side: const BorderSide(
-                    color: Colors.black,
-                    width: 1,
-                    strokeAlign: BorderSide.strokeAlignOutside,
-                  ),
-                ),
-              ),
-              onPressed: () {
-                Navigator.push(
-                  context,
-                  MaterialPageRoute(builder: (context) => const SignLanguageAvatarScreen()),
-                );
-              },
-              child: const Text(
-                'Avatar Translator',
-                style: TextStyle(
-                  fontSize: 20,
-                  fontWeight: FontWeight.w300,
-                  fontFamily: 'LondrinaThin',
-                  color: Color(0xCC000000),
-                ),
-              ),
-            ),
-          ],
+            );
+          },
+          child: Image.asset(
+            'assets/images/hello.png',
+            height: 60,
+            width: 60,
+            fit: BoxFit.contain,
+            errorBuilder: (context, error, stackTrace) {
+              return _buildFallbackIcon();
+            },
+          ),
         ),
       ),
     );
   }
-}
 
+  Widget _buildFallbackIcon() {
+    return const Icon(
+      Icons.waving_hand,
+      size: 40,
+      color: Colors.black,
+    );
+  }
 
-// DASHBOARD SCREEN - UPDATED
-class DashboardScreen extends StatelessWidget {
-  const DashboardScreen({super.key});
+  Widget _buildAnimatedFeatureIcon({
+    required String assetPath,
+    required Color fallbackColor,
+    required IconData fallbackIcon,
+    double size = 60,
+  }) {
+    return AnimatedBuilder(
+      animation: _featureAnimationController,
+      builder: (context, child) {
+        // Bounce effect (up and down)
+        final bounceValue = (sin(_featureAnimationController.value * 2 * 3.14) * 8);
+        
+        return Transform.translate(
+          offset: Offset(0, bounceValue),
+          child: child,
+        );
+      },
+      child: Image.asset(
+        assetPath,
+        height: size,
+        width: size,
+        fit: BoxFit.contain,
+        errorBuilder: (context, error, stackTrace) {
+          return Container(
+            height: size,
+            width: size,
+            decoration: BoxDecoration(
+              color: fallbackColor,
+              shape: BoxShape.circle,
+            ),
+            child: Center(
+              child: Icon(
+                fallbackIcon,
+                size: size * 0.5,
+                color: Colors.white,
+              ),
+            ),
+          );
+        },
+      ),
+    );
+  }
 
   @override
   Widget build(BuildContext context) {
     final screenHeight = MediaQuery.of(context).size.height;
-    
     final bool isSmallScreen = screenHeight < 700;
-    final double buttonHeight = isSmallScreen ? 100 : 120;
-    final double iconSize = isSmallScreen ? 32 : 40;
-    final double buttonTextSize = isSmallScreen ? 16 : 18;
     final double verticalSpacing = isSmallScreen ? 10 : 15;
-    
+
     return Scaffold(
-      backgroundColor: const Color(0xFFF0EAD6),
+      backgroundColor: const Color(0xFFF5FBE6),
       body: SafeArea(
         child: Column(
           children: [
+            // Header Section - UPDATED WITH ANIMATED HELLO ICON
             Container(
               padding: const EdgeInsets.all(20.0),
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
                   const SizedBox(height: 20),
-                  const Align(
-                    alignment: Alignment.centerLeft,
-                    child: Text(
-                      'Hello',
-                      style: TextStyle(
-                        fontSize: 28,
-                        fontFamily: 'LondrinaSolid',
+                  
+                  // Animated Hello section with icon
+                  Row(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      // ANIMATED HELLO ICON - hello.png with wave animation
+                      Column(
+                        mainAxisSize: MainAxisSize.min,
+                        children: [
+                          _buildAnimatedHelloIcon(),
+                        ],
                       ),
-                    ),
-                  ),
-                  Align(
-                    alignment: Alignment.centerLeft,
-                    child: Text(
-                      UserProvider.getUserName(),
-                      style: const TextStyle(
-                        fontSize: 48,
-                        fontWeight: FontWeight.bold,
-                        fontFamily: 'LondrinaSolid',
+                      const SizedBox(width: 15),
+                      Expanded(
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            // Animated greeting text
+                            AnimatedSwitcher(
+                              duration: const Duration(milliseconds: 300),
+                              child: Text(
+                                _currentMessage,
+                                key: ValueKey<String>(_currentMessage),
+                                style: TextStyle(
+                                  fontSize: _isIconTapped ? 32 : 28,
+                                  fontFamily: 'TitanOne-Regular',
+                                  color: Colors.black,
+                                  shadows: _isIconTapped ? [
+                                    Shadow(
+                                      color: Colors.black.withOpacity(0.2),
+                                      blurRadius: 4,
+                                      offset: const Offset(2, 2),
+                                    )
+                                  ] : null,
+                                ),
+                              ),
+                            ),
+                            
+                            // User name with special effects
+                            Padding(
+                              padding: EdgeInsets.only(top: _isIconTapped ? 10 : 5),
+                              child: AnimatedScale(
+                                duration: const Duration(milliseconds: 200),
+                                scale: _isIconTapped ? 1.05 : 1.0,
+                                child: Text(
+                                  UserProvider.getUserName(),
+                                  style: const TextStyle(
+                                    fontSize: 48,
+                                    fontWeight: FontWeight.bold,
+                                    fontFamily: 'TitanOne-Regular',
+                                    color: Colors.black,
+                                  ),
+                                ),
+                              ),
+                            ),
+                          ],
+                        ),
                       ),
-                    ),
+                    ],
                   ),
+                  
                   const SizedBox(height: 30),
                   const Text(
                     'Features',
                     style: TextStyle(
                       fontSize: 24,
                       fontWeight: FontWeight.bold,
-                      fontFamily: 'LondrinaSolid',
+                      fontFamily: 'TitanOne-Regular',
                     ),
                   ),
                   const SizedBox(height: 15),
                 ],
               ),
             ),
-            
+
+            // Main Content with ALWAYS ANIMATED ICONS
             Expanded(
-              child: LayoutBuilder(
-                builder: (context, constraints) {
-                  final double availableWidth = constraints.maxWidth - 40;
-                  final double buttonSpacing = 15;
-                  final double buttonWidth = (availableWidth - buttonSpacing) / 2;
-                  
-                  return SingleChildScrollView(
-                    padding: const EdgeInsets.symmetric(horizontal: 20.0),
-                    child: Column(
+              child: SingleChildScrollView(
+                padding: const EdgeInsets.symmetric(horizontal: 20.0),
+                child: Column(
+                  children: [
+                    // First Row - Topics and Progress
+                    Row(
                       children: [
-                        Column(
-                          children: [
-                            Row(
-                              children: [
-                                SizedBox(
-                                  width: buttonWidth,
-                                  height: buttonHeight,
-                                  child: Container(
-                                    decoration: BoxDecoration(
-                                      color: const Color(0xFF8E97FD),
-                                      borderRadius: BorderRadius.circular(12),
-                                      border: Border.all(color: Colors.black, width: 1),
-                                    ),
-                                    child: Material(
-                                      color: Colors.transparent,
-                                      child: InkWell(
-                                        borderRadius: BorderRadius.circular(12),
-                                        onTap: () {
-                                          Navigator.push(
-                                            context,
-                                            MaterialPageRoute(builder: (context) => const TopicsScreen()),
-                                          );
-                                        },
-                                        child: Center(
-                                          child: Column(
-                                            mainAxisAlignment: MainAxisAlignment.center,
-                                            children: [
-                                              Icon(Icons.menu_book, size: iconSize, color: Colors.black),
-                                              SizedBox(height: verticalSpacing / 2),
-                                              Text(
-                                                'Topics',
-                                                style: TextStyle(
-                                                  fontSize: buttonTextSize,
-                                                  fontWeight: FontWeight.bold,
-                                                  fontFamily: 'LondrinaSolid',
-                                                  color: Colors.black,
-                                                ),
-                                              ),
-                                            ],
-                                          ),
-                                        ),
-                                      ),
+                        // TOPICS BUTTON - Bouncing Icon
+                        Expanded(
+                          child: GestureDetector(
+                            onTap: () {
+                              Navigator.push(
+                                context,
+                                MaterialPageRoute(builder: (context) => const TopicsScreen()),
+                              );
+                            },
+                            child: Container(
+                              height: 150,
+                              margin: const EdgeInsets.only(right: 10),
+                              padding: const EdgeInsets.all(15),
+                              decoration: BoxDecoration(
+                                color: const Color(0xFF8E97FD),
+                                borderRadius: BorderRadius.circular(20),
+                                border: Border.all(color: Colors.black, width: 2),
+                                boxShadow: [
+                                  BoxShadow(
+                                    color: Colors.black.withOpacity(0.1),
+                                    blurRadius: 8,
+                                    offset: const Offset(0, 4),
+                                  ),
+                                ],
+                              ),
+                              child: Column(
+                                mainAxisAlignment: MainAxisAlignment.center,
+                                children: [
+                                  _buildAnimatedFeatureIcon(
+                                    assetPath: 'assets/images/topics.png',
+                                    fallbackColor: const Color(0xFF3291B6),
+                                    fallbackIcon: Icons.menu_book,
+                                  ),
+                                  const SizedBox(height: 10),
+                                  const Text(
+                                    'Topics',
+                                    textAlign: TextAlign.center,
+                                    style: TextStyle(
+                                      fontSize: 18,
+                                      fontWeight: FontWeight.bold,
+                                      fontFamily: 'TitanOne-Regular',
+                                      color: Colors.black,
                                     ),
                                   ),
-                                ),
-                                SizedBox(width: buttonSpacing),
-                                
-                                SizedBox(
-                                  width: buttonWidth,
-                                  height: buttonHeight,
-                                  child: Container(
-                                    decoration: BoxDecoration(
-                                      color: const Color(0xFFC4B1E1),
-                                      borderRadius: BorderRadius.circular(12),
-                                      border: Border.all(color: Colors.black, width: 1),
-                                    ),
-                                    child: Material(
-                                      color: Colors.transparent,
-                                      child: InkWell(
-                                        borderRadius: BorderRadius.circular(12),
-                                        onTap: () {
-                                          Navigator.push(
-                                            context,
-                                            MaterialPageRoute(builder: (context) => const ProgressScreen()),
-                                          );
-                                        },
-                                        child: Center(
-                                          child: Column(
-                                            mainAxisAlignment: MainAxisAlignment.center,
-                                            children: [
-                                              Icon(Icons.trending_up, size: iconSize, color: Colors.black),
-                                              SizedBox(height: verticalSpacing / 2),
-                                              Text(
-                                                'Progress',
-                                                style: TextStyle(
-                                                  fontSize: buttonTextSize,
-                                                  fontWeight: FontWeight.bold,
-                                                  fontFamily: 'LondrinaSolid',
-                                                  color: Colors.black,
-                                                ),
-                                              ),
-                                            ],
-                                          ),
-                                        ),
-                                      ),
-                                    ),
-                                  ),
-                                ),
-                              ],
+                                ],
+                              ),
                             ),
-                            SizedBox(height: verticalSpacing),
-                            
-                            Row(
-                              children: [
-                                SizedBox(
-                                  width: buttonWidth,
-                                  height: buttonHeight,
-                                  child: Container(
-                                    decoration: BoxDecoration(
-                                      color: const Color(0xFFE9C46A),
-                                      borderRadius: BorderRadius.circular(12),
-                                      border: Border.all(color: Colors.black, width: 1),
-                                    ),
-                                    child: Material(
-                                      color: Colors.transparent,
-                                      child: InkWell(
-                                        borderRadius: BorderRadius.circular(12),
-                                        onTap: () {
-                                          Navigator.push(
-                                            context,
-                                            MaterialPageRoute(builder: (context) => const SignDictionaryScreen()),
-                                          );
-                                        },
-                                        child: Center(
-                                          child: Column(
-                                            mainAxisAlignment: MainAxisAlignment.center,
-                                            children: [
-                                              Icon(Icons.sign_language, size: iconSize, color: Colors.black),
-                                              SizedBox(height: verticalSpacing / 2),
-                                              Text(
-                                                'Sign\nDictionary',
-                                                textAlign: TextAlign.center,
-                                                style: TextStyle(
-                                                  fontSize: buttonTextSize,
-                                                  fontWeight: FontWeight.bold,
-                                                  fontFamily: 'LondrinaSolid',
-                                                  color: Colors.black,
-                                                ),
-                                              ),
-                                            ],
-                                          ),
-                                        ),
-                                      ),
-                                    ),
-                                  ),
-                                ),
-                                SizedBox(width: buttonSpacing),
-                                
-                                SizedBox(
-                                  width: buttonWidth,
-                                  height: buttonHeight,
-                                  child: Container(
-                                    decoration: BoxDecoration(
-                                      color: const Color(0xFFA8E6CF),
-                                      borderRadius: BorderRadius.circular(12),
-                                      border: Border.all(color: Colors.black, width: 1),
-                                    ),
-                                    child: Material(
-                                      color: Colors.transparent,
-                                      child: InkWell(
-                                        borderRadius: BorderRadius.circular(12),
-                                        onTap: () {
-                                          Navigator.push(
-                                            context,
-                                            MaterialPageRoute(builder: (context) => const SignLanguageAvatarScreen()),
-                                          );
-                                        },
-                                        child: Center(
-                                          child: Column(
-                                            mainAxisAlignment: MainAxisAlignment.center,
-                                            children: [
-                                              Icon(Icons.face, size: iconSize, color: Colors.black),
-                                              SizedBox(height: verticalSpacing / 2),
-                                              Text(
-                                                'Sign Language\nAvatar',
-                                                textAlign: TextAlign.center,
-                                                style: TextStyle(
-                                                  fontSize: buttonTextSize,
-                                                  fontWeight: FontWeight.bold,
-                                                  fontFamily: 'LondrinaSolid',
-                                                  color: Colors.black,
-                                                ),
-                                              ),
-                                            ],
-                                          ),
-                                        ),
-                                      ),
-                                    ),
-                                  ),
-                                ),
-                              ],
-                            ),
-                          ],
+                          ),
                         ),
-                        SizedBox(height: verticalSpacing * 2),
+
+                        // PROGRESS BUTTON - Bouncing Icon
+                        Expanded(
+                          child: GestureDetector(
+                            onTap: () {
+                              Navigator.push(
+                                context,
+                                MaterialPageRoute(builder: (context) => const ProgressScreen()),
+                              );
+                            },
+                            child: Container(
+                              height: 150,
+                              margin: const EdgeInsets.only(left: 10),
+                              padding: const EdgeInsets.all(15),
+                              decoration: BoxDecoration(
+                                color: const Color(0xFFF4B342),
+                                borderRadius: BorderRadius.circular(20),
+                                border: Border.all(color: Colors.black, width: 2),
+                                boxShadow: [
+                                  BoxShadow(
+                                    color: Colors.black.withOpacity(0.1),
+                                    blurRadius: 8,
+                                    offset: const Offset(0, 4),
+                                  ),
+                                ],
+                              ),
+                              child: Column(
+                                mainAxisAlignment: MainAxisAlignment.center,
+                                children: [
+                                  _buildAnimatedFeatureIcon(
+                                    assetPath: 'assets/images/to-do-list.png',
+                                    fallbackColor: const Color(0xFFA88BD4),
+                                    fallbackIcon: Icons.trending_up,
+                                  ),
+                                  const SizedBox(height: 10),
+                                  const Text(
+                                    'Progress',
+                                    textAlign: TextAlign.center,
+                                    style: TextStyle(
+                                      fontSize: 18,
+                                      fontWeight: FontWeight.bold,
+                                      fontFamily: 'TitanOne-Regular',
+                                      color: Colors.black,
+                                    ),
+                                  ),
+                                ],
+                              ),
+                            ),
+                          ),
+                        ),
                       ],
                     ),
-                  );
-                },
-              ),
-            ),
-            
-            Container(
-              width: double.infinity,
-              padding: const EdgeInsets.all(20.0),
-              child: Container(
-                padding: const EdgeInsets.symmetric(vertical: 15, horizontal: 30),
-                decoration: BoxDecoration(
-                  color: Colors.white,
-                  borderRadius: BorderRadius.circular(25),
-                  border: Border.all(color: Colors.black, width: 1),
-                  boxShadow: [
-                    BoxShadow(
-                      color: Color.fromRGBO(0, 0, 0, 0.1),
-                      blurRadius: 6,
-                      offset: const Offset(2, 2),
-                    ),
-                  ],
-                ),
-                child: Row(
-                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                  children: [
-                    Container(
-                      padding: const EdgeInsets.all(10),
-                      decoration: BoxDecoration(
-                        color: const Color(0xFFFFF59D),
-                        shape: BoxShape.circle,
-                        border: Border.all(color: Colors.black, width: 1),
-                      ),
-                      child: Icon(Icons.home, size: isSmallScreen ? 24 : 28, color: Colors.black),
-                    ),
-                    
-                    InkWell(
-                      onTap: () {
-                        Navigator.push(
-                          context,
-                          MaterialPageRoute(builder: (context) => const ProfileScreen()),
-                        );
-                      },
-                      child: Container(
-                        padding: const EdgeInsets.all(10),
-                        decoration: BoxDecoration(
-                          color: Colors.white,
-                          shape: BoxShape.circle,
-                          border: Border.all(color: Colors.black, width: 1),
+                    SizedBox(height: verticalSpacing * 2),
+
+                    // Second Row - Sign Dictionary and Sign Language Avatar
+                    Row(
+                      children: [
+                        // SIGN DICTIONARY BUTTON - Bouncing Icon
+                        Expanded(
+                          child: GestureDetector(
+                            onTap: () {
+                              Navigator.push(
+                                context,
+                                MaterialPageRoute(builder: (context) => const SignDictionaryScreen()),
+                              );
+                            },
+                            child: Container(
+                              height: 150,
+                              margin: const EdgeInsets.only(right: 10),
+                              padding: const EdgeInsets.all(15),
+                              decoration: BoxDecoration(
+                                color: const Color(0xFFE0A8A8),
+                                borderRadius: BorderRadius.circular(20),
+                                border: Border.all(color: const Color.fromRGBO(0, 0, 0, 1), width: 2),
+                                boxShadow: [
+                                  BoxShadow(
+                                    color: Colors.black.withOpacity(0.1),
+                                    blurRadius: 8,
+                                    offset: const Offset(0, 4),
+                                  ),
+                                ],
+                              ),
+                              child: Column(
+                                mainAxisAlignment: MainAxisAlignment.center,
+                                children: [
+                                  _buildAnimatedFeatureIcon(
+                                    assetPath: 'assets/images/dictionary.png',
+                                    fallbackColor: const Color(0xFFD4B054),
+                                    fallbackIcon: Icons.sign_language,
+                                  ),
+                                  const SizedBox(height: 10),
+                                  const Text(
+                                    'Sign Dictionary',
+                                    textAlign: TextAlign.center,
+                                    style: TextStyle(
+                                      fontSize: 18,
+                                      fontWeight: FontWeight.bold,
+                                      fontFamily: 'TitanOne-Regular',
+                                      color: Colors.black,
+                                    ),
+                                  ),
+                                ],
+                              ),
+                            ),
+                          ),
                         ),
-                        child: Icon(Icons.account_circle, size: isSmallScreen ? 24 : 28, color: Colors.black),
-                      ),
+
+                        // SIGN LANGUAGE AVATAR BUTTON - Bouncing Icon
+                        Expanded(
+                          child: GestureDetector(
+                            onTap: () {
+                              Navigator.push(
+                                context,
+                                MaterialPageRoute(builder: (context) => const SignLanguageAvatarScreen()),
+                              );
+                            },
+                            child: Container(
+                              height: 150,
+                              margin: const EdgeInsets.only(left: 10),
+                              padding: const EdgeInsets.all(15),
+                              decoration: BoxDecoration(
+                                color: const Color(0xFF8498C8),
+                                borderRadius: BorderRadius.circular(20),
+                                border: Border.all(color: Colors.black, width: 2),
+                                boxShadow: [
+                                  BoxShadow(
+                                    color: Colors.black.withOpacity(0.1),
+                                    blurRadius: 8,
+                                    offset: const Offset(0, 4),
+                                  ),
+                                ],
+                              ),
+                              child: Column(
+                                mainAxisAlignment: MainAxisAlignment.center,
+                                children: [
+                                  _buildAnimatedFeatureIcon(
+                                    assetPath: 'assets/images/sign-language.png',
+                                    fallbackColor: const Color(0xFF8AD4B5),
+                                    fallbackIcon: Icons.face,
+                                  ),
+                                  const SizedBox(height: 10),
+                                  const Text(
+                                    'Sign Language Avatar',
+                                    textAlign: TextAlign.center,
+                                    style: TextStyle(
+                                      fontSize: 16,
+                                      fontWeight: FontWeight.bold,
+                                      fontFamily: 'TitanOne-Regular',
+                                      color: Colors.black,
+                                    ),
+                                  ),
+                                ],
+                              ),
+                            ),
+                          ),
+                        ),
+                      ],
                     ),
+                    SizedBox(height: verticalSpacing * 3),
                   ],
                 ),
               ),
             ),
+
+            // BOTTOM NAVIGATION BAR - SIMPLIFIED WITHOUT CONTAINER
+            Container(
+              padding: const EdgeInsets.symmetric(vertical: 10, horizontal: 30),
+              child: Row(
+                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                children: [
+                  // Home Button
+                  GestureDetector(
+                    onTap: () {
+                      // Already on home screen
+                    },
+                    child: Column(
+                      mainAxisSize: MainAxisSize.min,
+                      children: [
+                        Container(
+                          padding: const EdgeInsets.all(10),
+                          decoration: BoxDecoration(
+                            color: const Color(0xFFFFF59D),
+                            shape: BoxShape.circle,
+                            border: Border.all(color: Colors.black, width: 2),
+                          ),
+                          child: Icon(
+                            Icons.home,
+                            size: isSmallScreen ? 24 : 28,
+                            color: Colors.black,
+                          ),
+                        ),
+                        const SizedBox(height: 5),
+                        const Text(
+                          'Home',
+                          style: TextStyle(
+                            fontSize: 12,
+                            fontWeight: FontWeight.bold,
+                            fontFamily: 'TitanOne-Regular',
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                  
+                  // Profile Button
+                  GestureDetector(
+                    onTap: () {
+                      Navigator.push(
+                        context,
+                        MaterialPageRoute(builder: (context) => const ProfileScreen()),
+                      );
+                    },
+                    child: Column(
+                      mainAxisSize: MainAxisSize.min,
+                      children: [
+                        Container(
+                          padding: const EdgeInsets.all(10),
+                          decoration: BoxDecoration(
+                            color: Colors.white,
+                            shape: BoxShape.circle,
+                            border: Border.all(color: Colors.black, width: 2),
+                          ),
+                          child: Icon(
+                            Icons.account_circle,
+                            size: isSmallScreen ? 24 : 28,
+                            color: Colors.black,
+                          ),
+                        ),
+                        const SizedBox(height: 5),
+                        const Text(
+                          'Profile',
+                          style: TextStyle(
+                            fontSize: 12,
+                            fontWeight: FontWeight.bold,
+                            fontFamily: 'TitanOne-Regular',
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                ],
+              ),
+            ),
+            SizedBox(height: MediaQuery.of(context).viewInsets.bottom > 0 ? 0 : 10),
           ],
         ),
       ),
@@ -1579,7 +2587,7 @@ class _SignLanguageAvatarScreenState extends State<SignLanguageAvatarScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: const Color(0xFFF0EAD6),
+      backgroundColor: const Color.fromARGB(255, 255, 255, 255),
       appBar: AppBar(
         elevation: 0,
         backgroundColor: const Color(0xFFF0EAD6),
@@ -1591,7 +2599,7 @@ class _SignLanguageAvatarScreenState extends State<SignLanguageAvatarScreen> {
           'Sign Language Avatar',
           style: TextStyle(
             color: Colors.black,
-            fontFamily: 'LondrinaSolid',
+            fontFamily: 'TitanOne-Regular',
             fontWeight: FontWeight.bold,
           ),
         ),
@@ -1609,7 +2617,7 @@ class _SignLanguageAvatarScreenState extends State<SignLanguageAvatarScreen> {
                       width: 250,
                       height: 250,
                       child: Image.asset(
-                        'assets/images/avatar.png',
+                        'assets/videos/avatar.mp4',
                         fit: BoxFit.contain,
                         errorBuilder: (context, error, stackTrace) {
                           return Container(
@@ -1859,7 +2867,7 @@ class NumberValuesLessonsScreen extends StatelessWidget {
           style: TextStyle(
             fontSize: 24,
             fontWeight: FontWeight.bold,
-            fontFamily: 'LondrinaSolid',
+            fontFamily: 'TitanOne-Regular',
             color: Colors.black,
           ),
         ),
@@ -1920,7 +2928,7 @@ class NumberValuesLessonsScreen extends StatelessWidget {
                 style: const TextStyle(
                   fontSize: 20,
                   fontWeight: FontWeight.bold,
-                  fontFamily: 'LondrinaSolid',
+                  fontFamily: 'TitanOne-Regular',
                 ),
               ),
             ),
@@ -1949,7 +2957,7 @@ class NumberValuesLessonsScreen extends StatelessWidget {
               style: const TextStyle(
                 fontSize: 20,
                 fontWeight: FontWeight.bold,
-                fontFamily: 'LondrinaSolid',
+                fontFamily: 'TitanOne-Regular',
                 color: Colors.black54,
               ),
             ),
@@ -1980,7 +2988,7 @@ class FractionLessonsScreen extends StatelessWidget {
           style: TextStyle(
             fontSize: 24,
             fontWeight: FontWeight.bold,
-            fontFamily: 'LondrinaSolid',
+            fontFamily: 'TitanOne-Regular',
             color: Colors.black,
           ),
         ),
@@ -2021,7 +3029,7 @@ class FractionLessonsScreen extends StatelessWidget {
               style: TextStyle(
                 fontSize: 20,
                 fontWeight: FontWeight.bold,
-                fontFamily: 'LondrinaSolid',
+                fontFamily: 'TitanOne-Regular',
                 color: isClickable ? Colors.black : Colors.black54,
               ),
             ),
@@ -2055,7 +3063,7 @@ class FundamentalOperationsLessonsScreen extends StatelessWidget {
           style: TextStyle(
             fontSize: 24,
             fontWeight: FontWeight.bold,
-            fontFamily: 'LondrinaSolid',
+            fontFamily: 'TitanOne-Regular',
             color: Colors.black,
           ),
         ),
@@ -2101,7 +3109,7 @@ class FundamentalOperationsLessonsScreen extends StatelessWidget {
               style: TextStyle(
                 fontSize: 20,
                 fontWeight: FontWeight.bold,
-                fontFamily: 'LondrinaSolid',
+                fontFamily: 'TitanOne-Regular',
                 color: isClickable ? Colors.black : Colors.black54,
               ),
             ),
@@ -2135,7 +3143,7 @@ class DecimalNumbersLessonsScreen extends StatelessWidget {
           style: TextStyle(
             fontSize: 24,
             fontWeight: FontWeight.bold,
-            fontFamily: 'LondrinaSolid',
+            fontFamily: 'TitanOne-Regular',
             color: Colors.black,
           ),
         ),
@@ -2176,7 +3184,7 @@ class DecimalNumbersLessonsScreen extends StatelessWidget {
               style: TextStyle(
                 fontSize: 20,
                 fontWeight: FontWeight.bold,
-                fontFamily: 'LondrinaSolid',
+                fontFamily: 'TitanOne-Regular',
                 color: isClickable ? Colors.black : Colors.black54,
               ),
             ),
@@ -2210,7 +3218,7 @@ class PercentageLessonsScreen extends StatelessWidget {
           style: TextStyle(
             fontSize: 24,
             fontWeight: FontWeight.bold,
-            fontFamily: 'LondrinaSolid',
+            fontFamily: 'TitanOne-Regular',
             color: Colors.black,
           ),
         ),
@@ -2251,7 +3259,7 @@ class PercentageLessonsScreen extends StatelessWidget {
               style: TextStyle(
                 fontSize: 20,
                 fontWeight: FontWeight.bold,
-                fontFamily: 'LondrinaSolid',
+                fontFamily: 'TitanOne-Regular',
                 color: isClickable ? Colors.black : Colors.black54,
               ),
             ),
@@ -2285,7 +3293,7 @@ class MensurationLessonsScreen extends StatelessWidget {
           style: TextStyle(
             fontSize: 24,
             fontWeight: FontWeight.bold,
-            fontFamily: 'LondrinaSolid',
+            fontFamily: 'TitanOne-Regular',
             color: Colors.black,
           ),
         ),
@@ -2328,7 +3336,7 @@ class MensurationLessonsScreen extends StatelessWidget {
               style: TextStyle(
                 fontSize: 20,
                 fontWeight: FontWeight.bold,
-                fontFamily: 'LondrinaSolid',
+                fontFamily: 'TitanOne-Regular',
                 color: isClickable ? Colors.black : Colors.black54,
               ),
             ),
@@ -2362,7 +3370,7 @@ class ProgressScreen extends StatelessWidget {
           style: TextStyle(
             fontSize: 24,
             fontWeight: FontWeight.bold,
-            fontFamily: 'LondrinaSolid',
+            fontFamily: 'TitanOne-Regular',
             color: Colors.black,
           ),
         ),
@@ -2380,7 +3388,7 @@ class ProgressScreen extends StatelessWidget {
                 style: TextStyle(
                   fontSize: 32,
                   fontWeight: FontWeight.bold,
-                  fontFamily: 'LondrinaSolid',
+                  fontFamily: 'TitanOne-Regular',
                 ),
               ),
               const Text(
@@ -2388,7 +3396,7 @@ class ProgressScreen extends StatelessWidget {
                 style: TextStyle(
                   fontSize: 32,
                   fontWeight: FontWeight.bold,
-                  fontFamily: 'LondrinaSolid',
+                  fontFamily: 'TitanOne-Regular',
                 ),
               ),
               const SizedBox(height: 20),
@@ -2409,7 +3417,7 @@ class ProgressScreen extends StatelessWidget {
                       style: TextStyle(
                         fontSize: 20,
                         fontWeight: FontWeight.bold,
-                        fontFamily: 'LondrinaSolid',
+                        fontFamily: 'TitanOne-Regular',
                       ),
                     ),
                     const SizedBox(height: 15),
@@ -2445,7 +3453,7 @@ class ProgressScreen extends StatelessWidget {
                               style: const TextStyle(
                                 fontSize: 14,
                                 fontWeight: FontWeight.bold,
-                                fontFamily: 'LondrinaSolid',
+                                fontFamily: 'TitanOne-Regular',
                                 color: Colors.black,
                               ),
                             ),
@@ -2484,7 +3492,7 @@ class ProgressScreen extends StatelessWidget {
                               style: TextStyle(
                                 fontSize: 18,
                                 fontWeight: FontWeight.bold,
-                                fontFamily: 'LondrinaSolid',
+                                fontFamily: 'TitanOne-Regular',
                               ),
                             ),
                             const SizedBox(height: 5),
@@ -2492,7 +3500,7 @@ class ProgressScreen extends StatelessWidget {
                               'In Progress',
                               style: TextStyle(
                                 fontSize: 16,
-                                fontFamily: 'LondrinaSolid',
+                                fontFamily: 'TitanOne-Regular',
                               ),
                             ),
                             const SizedBox(height: 8),
@@ -2512,7 +3520,7 @@ class ProgressScreen extends StatelessWidget {
                                     style: TextStyle(
                                       fontSize: 20,
                                       fontWeight: FontWeight.bold,
-                                      fontFamily: 'LondrinaSolid',
+                                      fontFamily: 'TitanOne-Regular',
                                     ),
                                   ),
                                 ),
@@ -2549,7 +3557,7 @@ class ProgressScreen extends StatelessWidget {
                               style: TextStyle(
                                 fontSize: 18,
                                 fontWeight: FontWeight.bold,
-                                fontFamily: 'LondrinaSolid',
+                                fontFamily: 'TitanOne-Regular',
                               ),
                             ),
                             const SizedBox(height: 8),
@@ -2569,7 +3577,7 @@ class ProgressScreen extends StatelessWidget {
                                     style: TextStyle(
                                       fontSize: 20,
                                       fontWeight: FontWeight.bold,
-                                      fontFamily: 'LondrinaSolid',
+                                      fontFamily: 'TitanOne-Regular',
                                     ),
                                   ),
                                 ),
@@ -2609,7 +3617,7 @@ class LessonsProgressScreen extends StatelessWidget {
           style: TextStyle(
             fontSize: 24,
             fontWeight: FontWeight.bold,
-            fontFamily: 'LondrinaSolid',
+            fontFamily: 'TitanOne-Regular',
             color: Colors.black,
           ),
         ),
@@ -2626,7 +3634,7 @@ class LessonsProgressScreen extends StatelessWidget {
               style: TextStyle(
                 fontSize: 28,
                 fontWeight: FontWeight.bold,
-                fontFamily: 'LondrinaSolid',
+                fontFamily: 'TitanOne-Regular',
               ),
             ),
             const Text(
@@ -2634,7 +3642,7 @@ class LessonsProgressScreen extends StatelessWidget {
               style: TextStyle(
                 fontSize: 28,
                 fontWeight: FontWeight.bold,
-                fontFamily: 'LondrinaSolid',
+                fontFamily: 'TitanOne-Regular',
               ),
             ),
             const SizedBox(height: 30),
@@ -2679,7 +3687,7 @@ class LessonsProgressScreen extends StatelessWidget {
                 style: const TextStyle(
                   fontSize: 18,
                   fontWeight: FontWeight.bold,
-                  fontFamily: 'LondrinaSolid',
+                  fontFamily: 'TitanOne-Regular',
                 ),
               ),
               Text(
@@ -2687,7 +3695,7 @@ class LessonsProgressScreen extends StatelessWidget {
                 style: const TextStyle(
                   fontSize: 18,
                   fontWeight: FontWeight.bold,
-                  fontFamily: 'LondrinaSolid',
+                  fontFamily: 'TitanOne-Regular',
                 ),
               ),
             ],
@@ -2739,7 +3747,7 @@ class QuizzesProgressScreen extends StatelessWidget {
           style: TextStyle(
             fontSize: 24,
             fontWeight: FontWeight.bold,
-            fontFamily: 'LondrinaSolid',
+            fontFamily: 'TitanOne-Regular',
             color: Colors.black,
           ),
         ),
@@ -2756,7 +3764,7 @@ class QuizzesProgressScreen extends StatelessWidget {
               style: TextStyle(
                 fontSize: 32,
                 fontWeight: FontWeight.bold,
-                fontFamily: 'LondrinaSolid',
+                fontFamily: 'TitanOne-Regular',
               ),
             ),
             const SizedBox(height: 30),
@@ -2794,7 +3802,7 @@ class QuizzesProgressScreen extends StatelessWidget {
             style: const TextStyle(
               fontSize: 18,
               fontWeight: FontWeight.bold,
-              fontFamily: 'LondrinaSolid',
+              fontFamily: 'TitanOne-Regular',
             ),
           ),
           const Icon(Icons.arrow_forward_ios, size: 20, color: Colors.black),
@@ -2805,8 +3813,76 @@ class QuizzesProgressScreen extends StatelessWidget {
 }
 
 // TOPICS SCREEN
-class TopicsScreen extends StatelessWidget {
+
+class TopicsScreen extends StatefulWidget {
   const TopicsScreen({super.key});
+
+  @override
+  State<TopicsScreen> createState() => _TopicsScreenState();
+}
+
+class _TopicsScreenState extends State<TopicsScreen> 
+    with TickerProviderStateMixin {
+  late AnimationController _animationController;
+  
+  // Different animation properties for each topic
+  final Map<String, Map<String, dynamic>> _topicAnimations = {
+    'Number Values': {
+      'type': 'bounce',
+      'amplitude': 12.0,
+      'color': Color(0xFFA8D5E3),
+      'image': 'assets/images/number values logo.png',
+    },
+    'Fundamental Operations': {
+      'type': 'float',
+      'amplitude': 8.0,
+      'rotation': 0.1,
+      'color': Color(0xFFF5C6D6),
+      'image': 'assets/images/fundamental operations.png',
+    },
+    'Fraction': {
+      'type': 'rotate',
+      'rotation': 0.3,
+      'color': Color(0xFFC4B1E1),
+      'image': 'assets/images/fraction.png',
+    },
+    'Decimal Numbers': {
+      'type': 'pulse',
+      'scale': 0.2,
+      'color': Color(0xFFFFD8A8),
+      'image': 'assets/images/decimal numbers.png',
+    },
+    'Percentage': {
+      'type': 'wave',
+      'amplitude': 15.0,
+      'frequency': 4.0,
+      'color': Color(0xFFA8E3B5),
+      'image': 'assets/images/percentage.png',
+    },
+    'Mensuration': {
+      'type': 'swing',
+      'amplitude': 20.0,
+      'rotation': 0.4,
+      'color': Color(0xFFD8A8FF),
+      'image': 'assets/images/mensuration.png',
+    },
+  };
+
+  @override
+  void initState() {
+    super.initState();
+    
+    _animationController = AnimationController(
+      vsync: this,
+      duration: Duration(seconds: 3),
+    )..repeat(reverse: true);
+  }
+
+  @override
+  void dispose() {
+    _animationController.dispose();
+    super.dispose();
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -2823,7 +3899,7 @@ class TopicsScreen extends StatelessWidget {
           style: TextStyle(
             fontSize: 24,
             fontWeight: FontWeight.bold,
-            fontFamily: 'LondrinaSolid',
+            fontFamily: 'TitanOne-Regular',
             color: Colors.black,
           ),
         ),
@@ -2835,128 +3911,62 @@ class TopicsScreen extends StatelessWidget {
           padding: const EdgeInsets.all(20.0),
           child: Column(
             mainAxisAlignment: MainAxisAlignment.center,
+            children: _topicAnimations.keys.map((topic) {
+              final config = _topicAnimations[topic]!;
+              return Padding(
+                padding: const EdgeInsets.only(bottom: 20),
+                child: _buildTopicItem(
+                  topic,
+                  config['color'] as Color,
+                  config['image'] as String,
+                  config,
+                ),
+              );
+            }).toList(),
+          ),
+        ),
+      ),
+    );
+  }
+
+  Widget _buildTopicItem(
+    String topicName,
+    Color boxColor,
+    String imagePath,
+    Map<String, dynamic> animationConfig,
+  ) {
+    return GestureDetector(
+      onTap: () {
+        _navigateToTopic(topicName, context);
+      },
+      child: MouseRegion(
+        cursor: SystemMouseCursors.click,
+        child: Container(
+          width: 330,
+          height: 187,
+          padding: const EdgeInsets.all(25),
+          decoration: BoxDecoration(
+            color: boxColor,
+            borderRadius: BorderRadius.circular(12),
+            border: Border.all(color: Colors.black, width: 1),
+          ),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              GestureDetector(
-                onTap: () {
-                  Navigator.push(
-                    context,
-                    MaterialPageRoute(builder: (context) => const NumberValuesLessonsScreen()),
-                  );
-                },
-                child: _buildTopicItem(
-                  'Number Values', 
-                  const Color(0xFFA8D5E3),
-                  Center(
-                    child: Image.asset(
-                      'assets/images/number values logo.png',
-                      height: 80,
-                      fit: BoxFit.contain,
-                    ),
-                  ),
+              Text(
+                topicName,
+                style: const TextStyle(
+                  fontSize: 20,
+                  fontWeight: FontWeight.bold,
+                  fontFamily: 'TitanOne-Regular',
                 ),
               ),
-              const SizedBox(height: 20),
-              
-              GestureDetector(
-                onTap: () {
-                  Navigator.push(
-                    context,
-                    MaterialPageRoute(builder: (context) => const FundamentalOperationsLessonsScreen()),
-                  );
-                },
-                child: _buildTopicItem(
-                  'Fundamental Operations', 
-                  const Color(0xFFF5C6D6),
-                  Center(
-                    child: Image.asset(
-                      'assets/images/fundamental operations.png',
-                      height: 80,
-                      fit: BoxFit.contain,
-                    ),
-                  ),
-                ),
-              ),
-              const SizedBox(height: 20),
-              
-              GestureDetector(
-                onTap: () {
-                  Navigator.push(
-                    context,
-                    MaterialPageRoute(builder: (context) => const FractionLessonsScreen()),
-                  );
-                },
-                child: _buildTopicItem(
-                  'Fraction', 
-                  const Color(0xFFC4B1E1),
-                  Center(
-                    child: Image.asset(
-                      'assets/images/fraction.png',
-                      height: 80,
-                      fit: BoxFit.contain,
-                    ),
-                  ),
-                ),
-              ),
-              const SizedBox(height: 20),
-
-              GestureDetector(
-                onTap: () {
-                  Navigator.push(
-                    context,
-                    MaterialPageRoute(builder: (context) => const DecimalNumbersLessonsScreen()),
-                  );
-                },
-                child: _buildTopicItem(
-                  'Decimal Numbers', 
-                  const Color(0xFFFFD8A8),
-                  Center(
-                    child: Image.asset(
-                      'assets/images/decimal numbers.png',
-                      height: 80,
-                      fit: BoxFit.contain,
-                    ),
-                  ),
-                ),
-              ),
-              const SizedBox(height: 20),
-
-              GestureDetector(
-                onTap: () {
-                  Navigator.push(
-                    context,
-                    MaterialPageRoute(builder: (context) => const PercentageLessonsScreen()),
-                  );
-                },
-                child: _buildTopicItem(
-                  'Percentage', 
-                  const Color(0xFFA8E3B5),
-                  Center(
-                    child: Image.asset(
-                      'assets/images/percentage.png',
-                      height: 80,
-                      fit: BoxFit.contain,
-                    ),
-                  ),
-                ),
-              ),
-              const SizedBox(height: 20),
-
-              GestureDetector(
-                onTap: () {
-                  Navigator.push(
-                    context,
-                    MaterialPageRoute(builder: (context) => const MensurationLessonsScreen()),
-                  );
-                },
-                child: _buildTopicItem(
-                  'Mensuration', 
-                  const Color(0xFFD8A8FF),
-                  Center(
-                    child: Image.asset(
-                      'assets/images/mensuration.png',
-                      height: 80,
-                      fit: BoxFit.contain,
-                    ),
+              const SizedBox(height: 10),
+              Expanded(
+                child: Center(
+                  child: _buildAnimatedIcon(
+                    imagePath,
+                    animationConfig,
                   ),
                 ),
               ),
@@ -2967,38 +3977,167 @@ class TopicsScreen extends StatelessWidget {
     );
   }
 
-  Widget _buildTopicItem(String topicName, Color boxColor, Widget content) {
-    return Container(
-      width: 330,
-      height: 187,
-      padding: const EdgeInsets.all(25),
-      decoration: BoxDecoration(
-        color: boxColor,
-        borderRadius: BorderRadius.circular(12),
-        border: Border.all(color: Colors.black, width: 1),
-      ),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Text(
-            topicName,
-            style: const TextStyle(
-              fontSize: 20,
-              fontWeight: FontWeight.bold,
-              fontFamily: 'LondrinaSolid',
-            ),
-          ),
-          const SizedBox(height: 10),
-          Expanded(
-            child: content,
-          ),
-        ],
-      ),
+  Widget _buildAnimatedIcon(
+    String imagePath,
+    Map<String, dynamic> animationConfig,
+  ) {
+    final animationType = animationConfig['type'] as String;
+    
+    return AnimatedBuilder(
+      animation: _animationController,
+      builder: (context, child) {
+        final value = _animationController.value;
+        
+        switch (animationType) {
+          case 'bounce':
+            final amplitude = (animationConfig['amplitude'] as double?) ?? 12.0;
+            final offset = sin(value * 2 * pi) * amplitude;
+            return Transform.translate(
+              offset: Offset(0, offset),
+              child: child,
+            );
+            
+          case 'float':
+            final amplitude = (animationConfig['amplitude'] as double?) ?? 8.0;
+            final rotation = (animationConfig['rotation'] as double?) ?? 0.05;
+            final offset = sin(value * 2 * pi) * amplitude;
+            final angle = sin(value * 2 * pi) * rotation;
+            return Transform.translate(
+              offset: Offset(0, offset),
+              child: Transform.rotate(
+                angle: angle,
+                child: child,
+              ),
+            );
+            
+          case 'rotate':
+            final rotation = (animationConfig['rotation'] as double?) ?? 0.2;
+            final angle = sin(value * 2 * pi) * rotation;
+            return Transform.rotate(
+              angle: angle,
+              child: child,
+            );
+            
+          case 'pulse':
+            final scaleAmount = (animationConfig['scale'] as double?) ?? 0.1;
+            final scale = 1.0 + sin(value * 2 * pi) * scaleAmount;
+            return Transform.scale(
+              scale: scale,
+              child: child,
+            );
+            
+          case 'wave':
+            final amplitude = (animationConfig['amplitude'] as double?) ?? 15.0;
+            final frequency = (animationConfig['frequency'] as double?) ?? 4.0;
+            final offset = sin(value * frequency * pi) * amplitude;
+            return Transform.translate(
+              offset: Offset(0, offset),
+              child: child,
+            );
+            
+          case 'swing':
+            final amplitude = (animationConfig['amplitude'] as double?) ?? 20.0;
+            final rotation = (animationConfig['rotation'] as double?) ?? 0.4;
+            final offset = sin(value * 2 * pi) * (amplitude / 2);
+            final angle = sin(value * 2 * pi) * rotation;
+            return Transform.rotate(
+              angle: angle,
+              child: Transform.translate(
+                offset: Offset(0, offset),
+                child: child,
+              ),
+            );
+            
+          default:
+            return child!;
+        }
+      },
+      child: _buildLogoImage(imagePath),
     );
   }
+
+  Widget _buildLogoImage(String imagePath) {
+    return Image.asset(
+      imagePath,
+      height: 80,
+      fit: BoxFit.contain,
+      errorBuilder: (context, error, stackTrace) {
+        return _buildFallbackIcon(imagePath);
+      },
+    );
+  }
+
+  Widget _buildFallbackIcon(String imagePath) {
+    // Simple pulsing fallback animation
+    return AnimatedBuilder(
+      animation: _animationController,
+      builder: (context, child) {
+        final value = _animationController.value;
+        final scale = 1.0 + sin(value * 2 * pi) * 0.1;
+        
+        return Transform.scale(
+          scale: scale,
+          child: Icon(
+            _getIconForTopic(imagePath),
+            size: 80,
+            color: Colors.black.withOpacity(0.7),
+          ),
+        );
+      },
+    );
+  }
+
+  IconData _getIconForTopic(String imagePath) {
+    if (imagePath.contains('number values')) return Icons.numbers;
+    if (imagePath.contains('fundamental operations')) return Icons.calculate;
+    if (imagePath.contains('fraction')) return Icons.pie_chart;
+    if (imagePath.contains('decimal numbers')) return Icons.money;
+    if (imagePath.contains('percentage')) return Icons.percent;
+    if (imagePath.contains('mensuration')) return Icons.square_foot;
+    return Icons.school;
+  }
+
+  void _navigateToTopic(String topicName, BuildContext context) {
+    switch (topicName) {
+      case 'Number Values':
+        Navigator.push(
+          context,
+          MaterialPageRoute(builder: (context) => const NumberValuesLessonsScreen()),
+        );
+        break;
+      case 'Fundamental Operations':
+        Navigator.push(
+          context,
+          MaterialPageRoute(builder: (context) => const FundamentalOperationsLessonsScreen()),
+        );
+        break;
+      case 'Fraction':
+        Navigator.push(
+          context,
+          MaterialPageRoute(builder: (context) => const FractionLessonsScreen()),
+        );
+        break;
+      case 'Decimal Numbers':
+        Navigator.push(
+          context,
+          MaterialPageRoute(builder: (context) => const DecimalNumbersLessonsScreen()),
+        );
+        break;
+      case 'Percentage':
+        Navigator.push(
+          context,
+          MaterialPageRoute(builder: (context) => const PercentageLessonsScreen()),
+        );
+        break;
+      case 'Mensuration':
+        Navigator.push(
+          context,
+          MaterialPageRoute(builder: (context) => const MensurationLessonsScreen()),
+        );
+        break;
+    }
+  }
 }
-
-
 
 // ENHANCED NUMBER VALUES QUIZ SCREEN - 20 ITEMS
 class NumberValuesQuizScreen extends StatefulWidget {
@@ -3204,7 +4343,7 @@ class _NumberValuesQuizScreenState extends State<NumberValuesQuizScreen> {
           style: TextStyle(
             fontSize: 24,
             fontWeight: FontWeight.bold,
-            fontFamily: 'LondrinaSolid',
+            fontFamily: 'TitanOne-Regular',
             color: Colors.black,
           ),
         ),
@@ -3223,7 +4362,7 @@ class _NumberValuesQuizScreenState extends State<NumberValuesQuizScreen> {
                   style: const TextStyle(
                     fontSize: 18,
                     fontWeight: FontWeight.bold,
-                    fontFamily: 'LondrinaSolid',
+                    fontFamily: 'TitanOne-Regular',
                   ),
                 ),
                 Row(
@@ -3235,7 +4374,7 @@ class _NumberValuesQuizScreenState extends State<NumberValuesQuizScreen> {
                       style: const TextStyle(
                         fontSize: 18,
                         fontWeight: FontWeight.bold,
-                        fontFamily: 'LondrinaSolid',
+                        fontFamily: 'TitanOne-Regular',
                       ),
                     ),
                   ],
@@ -3286,7 +4425,7 @@ class _NumberValuesQuizScreenState extends State<NumberValuesQuizScreen> {
                     style: const TextStyle(
                       fontSize: 20,
                       fontWeight: FontWeight.bold,
-                      fontFamily: 'LondrinaSolid',
+                      fontFamily: 'TitanOne-Regular',
                     ),
                   ),
                   const SizedBox(height: 20),
@@ -3315,7 +4454,7 @@ class _NumberValuesQuizScreenState extends State<NumberValuesQuizScreen> {
                               style: const TextStyle(
                                 fontSize: 24,
                                 fontWeight: FontWeight.bold,
-                                fontFamily: 'LondrinaSolid',
+                                fontFamily: 'TitanOne-Regular',
                               ),
                             ),
                           ),
@@ -3380,7 +4519,7 @@ class _NumberValuesQuizScreenState extends State<NumberValuesQuizScreen> {
                                   style: const TextStyle(
                                     fontSize: 16,
                                     fontWeight: FontWeight.bold,
-                                    fontFamily: 'LondrinaSolid',
+                                    fontFamily: 'TitanOne-Regular',
                                   ),
                                 ),
                               ),
@@ -3477,7 +4616,7 @@ class _NumberValuesQuizScreenState extends State<NumberValuesQuizScreen> {
           style: TextStyle(
             fontSize: 24,
             fontWeight: FontWeight.bold,
-            fontFamily: 'LondrinaSolid',
+            fontFamily: 'TitanOne-Regular',
             color: Colors.black,
           ),
         ),
@@ -3517,7 +4656,7 @@ class _NumberValuesQuizScreenState extends State<NumberValuesQuizScreen> {
                       style: const TextStyle(
                         fontSize: 32,
                         fontWeight: FontWeight.bold,
-                        fontFamily: 'LondrinaSolid',
+                        fontFamily: 'TitanOne-Regular',
                       ),
                     ),
                     const SizedBox(height: 20),
@@ -3532,7 +4671,7 @@ class _NumberValuesQuizScreenState extends State<NumberValuesQuizScreen> {
                           style: const TextStyle(
                             fontSize: 36,
                             fontWeight: FontWeight.bold,
-                            fontFamily: 'LondrinaSolid',
+                            fontFamily: 'TitanOne-Regular',
                             color: Color(0xFF6B8E6B),
                           ),
                         ),
@@ -3544,7 +4683,7 @@ class _NumberValuesQuizScreenState extends State<NumberValuesQuizScreen> {
                       '$percentage% Correct',
                       style: const TextStyle(
                         fontSize: 20,
-                        fontFamily: 'LondrinaSolid',
+                        fontFamily: 'TitanOne-Regular',
                       ),
                     ),
                     const SizedBox(height: 30),
@@ -3565,7 +4704,7 @@ class _NumberValuesQuizScreenState extends State<NumberValuesQuizScreen> {
                         style: TextStyle(
                           fontSize: 18,
                           fontWeight: FontWeight.bold,
-                          fontFamily: 'LondrinaSolid',
+                          fontFamily: 'TitanOne-Regular',
                         ),
                       ),
                     ),
@@ -3614,7 +4753,7 @@ class ProfileScreen extends StatelessWidget {
           style: TextStyle(
             fontSize: 24,
             fontWeight: FontWeight.bold,
-            fontFamily: 'LondrinaSolid',
+            fontFamily: 'TitanOne-Regular',
             color: Colors.black,
           ),
         ),
@@ -3649,14 +4788,14 @@ class ProfileScreen extends StatelessWidget {
               style: const TextStyle(
                 fontSize: 28,
                 fontWeight: FontWeight.bold,
-                fontFamily: 'LondrinaSolid',
+                fontFamily: 'TitanOne-Regular',
               ),
             ),
             Text(
               UserProvider.getUserEmail(),
               style: const TextStyle(
                 fontSize: 16,
-                fontFamily: 'LondrinaSolid',
+                fontFamily: 'TitanOne-Regular',
                 color: Colors.grey,
               ),
             ),
@@ -3712,8 +4851,8 @@ class ProfileScreen extends StatelessWidget {
                     title,
                     style: const TextStyle(
                       fontSize: 18,
-                      fontWeight: FontWeight.w500,
-                      fontFamily: 'LondrinaSolid',
+                      fontWeight: FontWeight.bold,
+                      fontFamily: 'TitanOne-Regular',
                     ),
                   ),
                 ),
@@ -3739,7 +4878,7 @@ class ProfileScreen extends StatelessWidget {
               content: Text(
                 'Sign out successfully',
                 style: TextStyle(
-                  fontFamily: 'LondrinaSolid',
+                  fontFamily: 'TitanOne-Regular',
                   fontWeight: FontWeight.bold,
                 ),
               ),
@@ -3753,7 +4892,7 @@ class ProfileScreen extends StatelessWidget {
              if (!context.mounted) return;
             Navigator.pushAndRemoveUntil(
               context,
-              MaterialPageRoute(builder: (context) => const OptionSelectionScreen()),
+              MaterialPageRoute(builder: (context) => const FrontPageScreen()),
               (route) => false,
             );
           });
@@ -3772,7 +4911,7 @@ class ProfileScreen extends StatelessWidget {
               style: TextStyle(
                 fontSize: 18,
                 fontWeight: FontWeight.bold,
-                fontFamily: 'LondrinaSolid',
+                fontFamily: 'TitanOne-Regular',
                 color: Colors.black,
               ),
             ),
@@ -3802,7 +4941,7 @@ class SettingsScreen extends StatelessWidget {
           style: TextStyle(
             fontSize: 24,
             fontWeight: FontWeight.bold,
-            fontFamily: 'LondrinaSolid',
+            fontFamily: 'TitanOne-Regular',
             color: Colors.black,
           ),
         ),
@@ -3865,8 +5004,8 @@ class SettingsScreen extends StatelessWidget {
                   title,
                   style: const TextStyle(
                     fontSize: 18,
-                    fontWeight: FontWeight.w500,
-                    fontFamily: 'LondrinaSolid',
+                    fontWeight: FontWeight.bold,
+                    fontFamily: 'TitanOne-Regular',
                   ),
                 ),
               ),
@@ -3920,7 +5059,7 @@ class _LanguagesScreenState extends State<LanguagesScreen> {
         content: Text(
           'Language changed to $_selectedLanguage successfully!',
           style: const TextStyle(
-            fontFamily: 'LondrinaSolid',
+            fontFamily: 'TitanOne-Regular',
             fontWeight: FontWeight.bold,
           ),
         ),
@@ -3946,7 +5085,7 @@ class _LanguagesScreenState extends State<LanguagesScreen> {
           style: TextStyle(
             fontSize: 24,
             fontWeight: FontWeight.bold,
-            fontFamily: 'LondrinaSolid',
+            fontFamily: 'TitanOne-Regular',
             color: Colors.black,
           ),
         ),
@@ -3963,7 +5102,7 @@ class _LanguagesScreenState extends State<LanguagesScreen> {
               'Select your preferred language:',
               style: TextStyle(
                 fontSize: 16,
-                fontFamily: 'LondrinaSolid',
+                fontFamily: 'TitanOne-Regular',
               ),
             ),
             const SizedBox(height: 30),
@@ -4004,7 +5143,7 @@ class _LanguagesScreenState extends State<LanguagesScreen> {
                         style: TextStyle(
                           fontSize: 18,
                           fontWeight: FontWeight.bold,
-                          fontFamily: 'LondrinaSolid',
+                          fontFamily: 'TitanOne-Regular',
                         ),
                       ),
               ),
@@ -4042,8 +5181,8 @@ class _LanguagesScreenState extends State<LanguagesScreen> {
                 language,
                 style: const TextStyle(
                   fontSize: 18,
-                  fontWeight: FontWeight.w500,
-                  fontFamily: 'LondrinaSolid',
+                  fontWeight: FontWeight.bold,
+                  fontFamily: 'TitanOne-Regular',
                 ),
               ),
               if (isSelected)
@@ -4075,7 +5214,7 @@ class HelpScreen extends StatelessWidget {
           style: TextStyle(
             fontSize: 24,
             fontWeight: FontWeight.bold,
-            fontFamily: 'LondrinaSolid',
+            fontFamily: 'TitanOne-Regular',
             color: Colors.black,
           ),
         ),
@@ -4114,7 +5253,7 @@ class HelpScreen extends StatelessWidget {
                     style: TextStyle(
                       fontSize: 22,
                       fontWeight: FontWeight.bold,
-                      fontFamily: 'LondrinaSolid',
+                      fontFamily: 'TitanOne-Regular',
                     ),
                   ),
                 ],
@@ -4128,7 +5267,7 @@ class HelpScreen extends StatelessWidget {
               style: TextStyle(
                 fontSize: 20,
                 fontWeight: FontWeight.bold,
-                fontFamily: 'LondrinaSolid',
+                fontFamily: 'TitanOne-Regular',
               ),
             ),
             const SizedBox(height: 15),
@@ -4161,7 +5300,7 @@ class HelpScreen extends StatelessWidget {
                     style: TextStyle(
                       fontSize: 18,
                       fontWeight: FontWeight.bold,
-                      fontFamily: 'LondrinaSolid',
+                      fontFamily: 'TitanOne-Regular',
                     ),
                   ),
                   const SizedBox(height: 10),
@@ -4169,7 +5308,7 @@ class HelpScreen extends StatelessWidget {
                     'Our support team is here to help you with any questions or issues you may have.',
                     style: TextStyle(
                       fontSize: 14,
-                      fontFamily: 'LondrinaSolid',
+                      fontFamily: 'TitanOne-Regular',
                     ),
                   ),
                   const SizedBox(height: 15),
@@ -4186,7 +5325,7 @@ class HelpScreen extends StatelessWidget {
                 'App Version: 1.0.0',
                 style: TextStyle(
                   fontSize: 14,
-                  fontFamily: 'LondrinaSolid',
+                  fontFamily: 'TitanOne-Regular',
                   color: Colors.grey,
                 ),
               ),
@@ -4214,7 +5353,7 @@ class HelpScreen extends StatelessWidget {
             style: const TextStyle(
               fontSize: 16,
               fontWeight: FontWeight.bold,
-              fontFamily: 'LondrinaSolid',
+              fontFamily: 'TitanOne-Regular',
             ),
           ),
           const SizedBox(height: 8),
@@ -4222,7 +5361,7 @@ class HelpScreen extends StatelessWidget {
             answer,
             style: const TextStyle(
               fontSize: 14,
-              fontFamily: 'LondrinaSolid',
+              fontFamily: 'TitanOne-Regular',
               color: Colors.black87,
             ),
           ),
@@ -4246,14 +5385,14 @@ class HelpScreen extends StatelessWidget {
                 style: const TextStyle(
                   fontSize: 14,
                   fontWeight: FontWeight.bold,
-                  fontFamily: 'LondrinaSolid',
+                  fontFamily: 'TitanOne-Regular',
                 ),
               ),
               Text(
                 details,
                 style: const TextStyle(
                   fontSize: 12,
-                  fontFamily: 'LondrinaSolid',
+                  fontFamily: 'TitanOne-Regular',
                   color: Colors.black87,
                 ),
               ),
@@ -4284,7 +5423,7 @@ class AboutScreen extends StatelessWidget {
           style: TextStyle(
             fontSize: 24,
             fontWeight: FontWeight.bold,
-            fontFamily: 'LondrinaSolid',
+            fontFamily: 'TitanOne-Regular',
             color: Colors.black,
           ),
         ),
@@ -4323,14 +5462,14 @@ class AboutScreen extends StatelessWidget {
                     style: TextStyle(
                       fontSize: 28,
                       fontWeight: FontWeight.bold,
-                      fontFamily: 'LondrinaSolid',
+                      fontFamily: 'TitanOne-Regular',
                     ),
                   ),
                   const Text(
                     'Mathematics Learning App',
                     style: TextStyle(
                       fontSize: 16,
-                      fontFamily: 'LondrinaSolid',
+                      fontFamily: 'TitanOne-Regular',
                       color: Colors.black87,
                     ),
                   ),
@@ -4345,7 +5484,7 @@ class AboutScreen extends StatelessWidget {
               style: TextStyle(
                 fontSize: 20,
                 fontWeight: FontWeight.bold,
-                fontFamily: 'LondrinaSolid',
+                fontFamily: 'TitanOne-Regular',
               ),
             ),
             const SizedBox(height: 10),
@@ -4353,7 +5492,7 @@ class AboutScreen extends StatelessWidget {
               'SenyaMatika is an innovative educational app designed to make learning mathematics fun and engaging for students of all ages. Our app combines interactive lessons and progress tracking to help you master mathematical concepts.',
               style: TextStyle(
                 fontSize: 16,
-                fontFamily: 'LondrinaSolid',
+                fontFamily: 'TitanOne-Regular',
                 height: 1.5,
               ),
             ),
@@ -4365,7 +5504,7 @@ class AboutScreen extends StatelessWidget {
               style: TextStyle(
                 fontSize: 20,
                 fontWeight: FontWeight.bold,
-                fontFamily: 'LondrinaSolid',
+                fontFamily: 'TitanOne-Regular',
               ),
             ),
             const SizedBox(height: 15),
@@ -4393,7 +5532,7 @@ class AboutScreen extends StatelessWidget {
                     style: TextStyle(
                       fontSize: 18,
                       fontWeight: FontWeight.bold,
-                      fontFamily: 'LondrinaSolid',
+                      fontFamily: 'TitanOne-Regular',
                     ),
                   ),
                   const SizedBox(height: 10),
@@ -4412,7 +5551,7 @@ class AboutScreen extends StatelessWidget {
                 '© 2025 SenyaMatika. All rights reserved.',
                 style: TextStyle(
                   fontSize: 12,
-                  fontFamily: 'LondrinaSolid',
+                  fontFamily: 'TitanOne-Regular',
                   color: Colors.grey,
                 ),
               ),
@@ -4446,7 +5585,7 @@ class AboutScreen extends StatelessWidget {
                   style: const TextStyle(
                     fontSize: 16,
                     fontWeight: FontWeight.bold,
-                    fontFamily: 'LondrinaSolid',
+                    fontFamily: 'TitanOne-Regular',
                   ),
                 ),
                 const SizedBox(height: 4),
@@ -4454,7 +5593,7 @@ class AboutScreen extends StatelessWidget {
                   description,
                   style: const TextStyle(
                     fontSize: 14,
-                    fontFamily: 'LondrinaSolid',
+                    fontFamily: 'TitanOne-Regular',
                     color: Colors.black87,
                   ),
                 ),
@@ -4477,14 +5616,14 @@ class AboutScreen extends StatelessWidget {
             style: const TextStyle(
               fontSize: 14,
               fontWeight: FontWeight.bold,
-              fontFamily: 'LondrinaSolid',
+              fontFamily: 'TitanOne-Regular',
             ),
           ),
           Text(
             value,
             style: const TextStyle(
               fontSize: 14,
-              fontFamily: 'LondrinaSolid',
+              fontFamily: 'TitanOne-Regular',
             ),
           ),
         ],
@@ -4512,7 +5651,7 @@ class PrivacyPolicyScreen extends StatelessWidget {
           style: TextStyle(
             fontSize: 24,
             fontWeight: FontWeight.bold,
-            fontFamily: 'LondrinaSolid',
+            fontFamily: 'TitanOne-Regular',
             color: Colors.black,
           ),
         ),
@@ -4529,7 +5668,7 @@ class PrivacyPolicyScreen extends StatelessWidget {
               'Last Updated: January 2024',
               style: TextStyle(
                 fontSize: 14,
-                fontFamily: 'LondrinaSolid',
+                fontFamily: 'TitanOne-Regular',
                 color: Colors.grey,
               ),
             ),
@@ -4587,7 +5726,7 @@ class PrivacyPolicyScreen extends StatelessWidget {
                     'By using SenyaMatika, you agree to the collection and use of information in accordance with this policy.',
                     style: TextStyle(
                       fontSize: 14,
-                      fontFamily: 'LondrinaSolid',
+                      fontFamily: 'TitanOne-Regular',
                     ),
                   ),
                   SizedBox(height: 10),
@@ -4595,7 +5734,7 @@ class PrivacyPolicyScreen extends StatelessWidget {
                     'We are committed to protecting your privacy and providing a safe learning environment.',
                     style: TextStyle(
                       fontSize: 14,
-                      fontFamily: 'LondrinaSolid',
+                      fontFamily: 'TitanOne-Regular',
                       fontWeight: FontWeight.bold,
                     ),
                   ),
@@ -4621,7 +5760,7 @@ class PrivacyPolicyScreen extends StatelessWidget {
             style: const TextStyle(
               fontSize: 18,
               fontWeight: FontWeight.bold,
-              fontFamily: 'LondrinaSolid',
+              fontFamily: 'TitanOne-Regular',
               color: Colors.black87,
             ),
           ),
@@ -4630,7 +5769,7 @@ class PrivacyPolicyScreen extends StatelessWidget {
             content,
             style: const TextStyle(
               fontSize: 14,
-              fontFamily: 'LondrinaSolid',
+              fontFamily: 'TitanOne-Regular',
               color: Colors.black87,
               height: 1.5,
             ),
@@ -4662,7 +5801,7 @@ class TermsOfUseScreen extends StatelessWidget {
           style: TextStyle(
             fontSize: 24,
             fontWeight: FontWeight.bold,
-            fontFamily: 'LondrinaSolid',
+            fontFamily: 'TitanOne-Regular',
             color: Colors.black,
           ),
         ),
@@ -4679,7 +5818,7 @@ class TermsOfUseScreen extends StatelessWidget {
               'Last Updated: January 2024',
               style: TextStyle(
                 fontSize: 14,
-                fontFamily: 'LondrinaSolid',
+                fontFamily: 'TitanOne-Regular',
                 color: Colors.grey,
               ),
             ),
@@ -4689,7 +5828,7 @@ class TermsOfUseScreen extends StatelessWidget {
               style: TextStyle(
                 fontSize: 22,
                 fontWeight: FontWeight.bold,
-                fontFamily: 'LondrinaSolid',
+                fontFamily: 'TitanOne-Regular',
               ),
             ),
             const SizedBox(height: 15),
@@ -4697,7 +5836,7 @@ class TermsOfUseScreen extends StatelessWidget {
               'By using SenyaMatika, you agree to these terms and conditions. Please read them carefully.',
               style: TextStyle(
                 fontSize: 16,
-                fontFamily: 'LondrinaSolid',
+                fontFamily: 'TitanOne-Regular',
                 height: 1.5,
               ),
             ),
@@ -4707,7 +5846,7 @@ class TermsOfUseScreen extends StatelessWidget {
               style: TextStyle(
                 fontSize: 18,
                 fontWeight: FontWeight.bold,
-                fontFamily: 'LondrinaSolid',
+                fontFamily: 'TitanOne-Regular',
               ),
             ),
             const SizedBox(height: 10),
@@ -4715,7 +5854,7 @@ class TermsOfUseScreen extends StatelessWidget {
               'You are responsible for maintaining the confidentiality of your account and password. You agree to accept responsibility for all activities that occur under your account.',
               style: TextStyle(
                 fontSize: 16,
-                fontFamily: 'LondrinaSolid',
+                fontFamily: 'TitanOne-Regular',
                 height: 1.5,
               ),
             ),
@@ -4815,7 +5954,7 @@ class _VideoLessonScreenState extends State<VideoLessonScreen> {
   @override
   Widget build(BuildContext context) {
     final currentSubLesson = _subLessons[widget.subLessonIndex];
-    
+  
     return Scaffold(
       backgroundColor: const Color(0xFFF0EAD6),
       appBar: AppBar(
@@ -4829,7 +5968,7 @@ class _VideoLessonScreenState extends State<VideoLessonScreen> {
           style: const TextStyle(
             fontSize: 20,
             fontWeight: FontWeight.bold,
-            fontFamily: 'LondrinaSolid',
+            fontFamily: 'TitanOne-Regular',
             color: Colors.black,
           ),
         ),
@@ -4846,7 +5985,7 @@ class _VideoLessonScreenState extends State<VideoLessonScreen> {
               style: const TextStyle(
                 fontSize: 22,
                 fontWeight: FontWeight.bold,
-                fontFamily: 'LondrinaSolid',
+                fontFamily: 'TitanOne-Regular',
               ),
             ),
             const SizedBox(height: 10),
@@ -4876,7 +6015,7 @@ class _VideoLessonScreenState extends State<VideoLessonScreen> {
                                     'Loading video...',
                                     style: TextStyle(
                                       color: Colors.white,
-                                      fontFamily: 'LondrinaSolid',
+                                      fontFamily: 'TitanOne-Regular',
                                     ),
                                   ),
                                 ],
@@ -4910,7 +6049,7 @@ class _VideoLessonScreenState extends State<VideoLessonScreen> {
                                   style: const TextStyle(
                                     fontSize: 12,
                                     fontWeight: FontWeight.bold,
-                                    fontFamily: 'LondrinaSolid',
+                                    fontFamily: 'TitanOne-Regular',
                                   ),
                                 ),
                               ),
@@ -4924,7 +6063,7 @@ class _VideoLessonScreenState extends State<VideoLessonScreen> {
                                     child: Text(
                                       '${speed}x Speed',
                                       style: const TextStyle(
-                                        fontFamily: 'LondrinaSolid',
+                                        fontFamily: 'TitanOne-Regular',
                                         fontSize: 12,
                                       ),
                                     ),
@@ -5035,7 +6174,7 @@ class _VideoLessonScreenState extends State<VideoLessonScreen> {
                           : 'Watch the video completely to unlock the exercise.',
                       style: const TextStyle(
                         fontSize: 14,
-                        fontFamily: 'LondrinaSolid',
+                        fontFamily: 'TitanOne-Regular',
                       ),
                     ),
                   ),
@@ -5062,7 +6201,7 @@ class _VideoLessonScreenState extends State<VideoLessonScreen> {
               currentSubLesson['description']!,
               style: const TextStyle(
                 fontSize: 16,
-                fontFamily: 'LondrinaSolid',
+                fontFamily: 'TitanOne-Regular',
               ),
             ),
 
@@ -5095,7 +6234,7 @@ class _VideoLessonScreenState extends State<VideoLessonScreen> {
                   style: const TextStyle(
                     fontSize: 18,
                     fontWeight: FontWeight.bold,
-                    fontFamily: 'LondrinaSolid',
+                    fontFamily: 'TitanOne-Regular',
                   ),
                 ),
               ),
@@ -5201,7 +6340,7 @@ class _ExerciseScreenState extends State<ExerciseScreen> {
           style: TextStyle(
             fontSize: 20,
             fontWeight: FontWeight.bold,
-            fontFamily: 'LondrinaSolid',
+            fontFamily: 'TitanOne-Regular',
             color: Colors.black,
           ),
         ),
@@ -5231,7 +6370,7 @@ class _ExerciseScreenState extends State<ExerciseScreen> {
                     style: TextStyle(
                       fontSize: 16,
                       fontWeight: FontWeight.bold,
-                      fontFamily: 'LondrinaSolid',
+                      fontFamily: 'TitanOne-Regular',
                     ),
                   ),
                 ],
@@ -5248,7 +6387,7 @@ class _ExerciseScreenState extends State<ExerciseScreen> {
                   style: const TextStyle(
                     fontSize: 16,
                     fontWeight: FontWeight.bold,
-                    fontFamily: 'LondrinaSolid',
+                    fontFamily: 'TitanOne-Regular',
                   ),
                 ),
                 if (_showResult)
@@ -5257,7 +6396,7 @@ class _ExerciseScreenState extends State<ExerciseScreen> {
                     style: const TextStyle(
                       fontSize: 16,
                       fontWeight: FontWeight.bold,
-                      fontFamily: 'LondrinaSolid',
+                      fontFamily: 'TitanOne-Regular',
                     ),
                   ),
               ],
@@ -5287,7 +6426,7 @@ class _ExerciseScreenState extends State<ExerciseScreen> {
                       'What comes AFTER:',
                       style: const TextStyle(
                         fontSize: 20,
-                        fontFamily: 'LondrinaSolid',
+                        fontFamily: 'TitanOne-Regular',
                       ),
                     ),
                     const SizedBox(height: 10),
@@ -5296,7 +6435,7 @@ class _ExerciseScreenState extends State<ExerciseScreen> {
                       style: const TextStyle(
                         fontSize: 60,
                         fontWeight: FontWeight.bold,
-                        fontFamily: 'LondrinaSolid',
+                        fontFamily: 'TitanOne-Regular',
                         color: Colors.blue,
                       ),
                     ),
@@ -5357,7 +6496,7 @@ class _ExerciseScreenState extends State<ExerciseScreen> {
                       style: const TextStyle(
                         fontSize: 18,
                         fontWeight: FontWeight.bold,
-                        fontFamily: 'LondrinaSolid',
+                        fontFamily: 'TitanOne-Regular',
                       ),
                     ),
                     const SizedBox(height: 20),
@@ -5370,7 +6509,7 @@ class _ExerciseScreenState extends State<ExerciseScreen> {
                       child: const Text(
                         'Try Again',
                         style: TextStyle(
-                          fontFamily: 'LondrinaSolid',
+                          fontFamily: 'TitanOne-Regular',
                           fontWeight: FontWeight.bold,
                         ),
                       ),
@@ -5432,7 +6571,7 @@ class _ExerciseScreenState extends State<ExerciseScreen> {
                         style: const TextStyle(
                           fontSize: 16,
                           fontWeight: FontWeight.bold,
-                          fontFamily: 'LondrinaSolid',
+                          fontFamily: 'TitanOne-Regular',
                         ),
                       ),
                     ),
@@ -5462,14 +6601,14 @@ class _ExerciseScreenState extends State<ExerciseScreen> {
         style: const TextStyle(
           fontSize: 24,
           fontWeight: FontWeight.bold,
-          fontFamily: 'LondrinaSolid',
+          fontFamily: 'TitanOne-Regular',
         ),
       ),
     );
   }
 }
 
-// SIGN DICTIONARY SCREEN
+// SIGN DICTIONARY SCREEN - UPDATED WITH INDIVIDUAL MATHEMATICAL TERMS
 class SignDictionaryScreen extends StatelessWidget {
   const SignDictionaryScreen({super.key});
 
@@ -5488,7 +6627,7 @@ class SignDictionaryScreen extends StatelessWidget {
           style: TextStyle(
             fontSize: 24,
             fontWeight: FontWeight.bold,
-            fontFamily: 'LondrinaSolid',
+            fontFamily: 'TitanOne-Regular',
             color: Colors.black,
           ),
         ),
@@ -5505,7 +6644,7 @@ class SignDictionaryScreen extends StatelessWidget {
               style: TextStyle(
                 fontSize: 32,
                 fontWeight: FontWeight.bold,
-                fontFamily: 'LondrinaSolid',
+                fontFamily: 'TitanOne-Regular',
               ),
             ),
             const Text(
@@ -5513,7 +6652,7 @@ class SignDictionaryScreen extends StatelessWidget {
               style: TextStyle(
                 fontSize: 32,
                 fontWeight: FontWeight.bold,
-                fontFamily: 'LondrinaSolid',
+                fontFamily: 'TitanOne-Regular',
               ),
             ),
             const SizedBox(height: 30),
@@ -5678,6 +6817,391 @@ class SignDictionaryScreen extends StatelessWidget {
                     ),
                   ],
                 ),
+                const SizedBox(height: 15),
+
+                // NEW MATHEMATICAL TERMS - ADDING EACH AS INDIVIDUAL CATEGORIES
+                Row(
+                  children: [
+                    Expanded(
+                      child: _buildCategoryItem(
+                        'Algebra',
+                        const Color(0xFF9C89B8),
+                        onTap: () {
+                          Navigator.push(
+                            context,
+                            MaterialPageRoute(builder: (context) => const AlgebraDictionaryScreen()),
+                          );
+                        },
+                      ),
+                    ),
+                    const SizedBox(width: 15),
+                    
+                    Expanded(
+                      child: _buildCategoryItem(
+                        'Analog Clock',
+                        const Color(0xFFF9A1BC),
+                        onTap: () {
+                          Navigator.push(
+                            context,
+                            MaterialPageRoute(builder: (context) => const AnalogClockDictionaryScreen()),
+                          );
+                        },
+                      ),
+                    ),
+                  ],
+                ),
+                const SizedBox(height: 15),
+
+                Row(
+                  children: [
+                    Expanded(
+                      child: _buildCategoryItem(
+                        'Arithmetic Operations',
+                        const Color(0xFF90BE6D),
+                        onTap: () {
+                          Navigator.push(
+                            context,
+                            MaterialPageRoute(builder: (context) => const ArithmeticOperationsDictionaryScreen()),
+                          );
+                        },
+                      ),
+                    ),
+                    const SizedBox(width: 15),
+                    
+                    Expanded(
+                      child: _buildCategoryItem(
+                        'Calculator',
+                        const Color(0xFF43AA8B),
+                        onTap: () {
+                          Navigator.push(
+                            context,
+                            MaterialPageRoute(builder: (context) => const CalculatorDictionaryScreen()),
+                          );
+                        },
+                      ),
+                    ),
+                  ],
+                ),
+                const SizedBox(height: 15),
+
+                Row(
+                  children: [
+                    Expanded(
+                      child: _buildCategoryItem(
+                        'Compose Number',
+                        const Color(0xFF4D908E),
+                        onTap: () {
+                          Navigator.push(
+                            context,
+                            MaterialPageRoute(builder: (context) => const ComposeNumberDictionaryScreen()),
+                          );
+                        },
+                      ),
+                    ),
+                    const SizedBox(width: 15),
+                    
+                    Expanded(
+                      child: _buildCategoryItem(
+                        'Convert',
+                        const Color(0xFF277DA1),
+                        onTap: () {
+                          Navigator.push(
+                            context,
+                            MaterialPageRoute(builder: (context) => const ConvertDictionaryScreen()),
+                          );
+                        },
+                      ),
+                    ),
+                  ],
+                ),
+                const SizedBox(height: 15),
+
+                Row(
+                  children: [
+                    Expanded(
+                      child: _buildCategoryItem(
+                        'Decompose Number',
+                        const Color(0xFF577590),
+                        onTap: () {
+                          Navigator.push(
+                            context,
+                            MaterialPageRoute(builder: (context) => const DecomposeNumberDictionaryScreen()),
+                          );
+                        },
+                      ),
+                    ),
+                    const SizedBox(width: 15),
+                    
+                    Expanded(
+                      child: _buildCategoryItem(
+                        'Digital Clock',
+                        const Color(0xFFF9844A),
+                        onTap: () {
+                          Navigator.push(
+                            context,
+                            MaterialPageRoute(builder: (context) => const DigitalClockDictionaryScreen()),
+                          );
+                        },
+                      ),
+                    ),
+                  ],
+                ),
+                const SizedBox(height: 15),
+
+                Row(
+                  children: [
+                    Expanded(
+                      child: _buildCategoryItem(
+                        'Geometry',
+                        const Color(0xFFF8961E),
+                        onTap: () {
+                          Navigator.push(
+                            context,
+                            MaterialPageRoute(builder: (context) => const GeometryDictionaryScreen()),
+                          );
+                        },
+                      ),
+                    ),
+                    const SizedBox(width: 15),
+                    
+                    Expanded(
+                      child: _buildCategoryItem(
+                        'Inverse operation',
+                        const Color(0xFFF3722C),
+                        onTap: () {
+                          Navigator.push(
+                            context,
+                            MaterialPageRoute(builder: (context) => const InverseOperationDictionaryScreen()),
+                          );
+                        },
+                      ),
+                    ),
+                  ],
+                ),
+                const SizedBox(height: 15),
+
+                Row(
+                  children: [
+                    Expanded(
+                      child: _buildCategoryItem(
+                        'Learner',
+                        const Color(0xFFF94144),
+                        onTap: () {
+                          Navigator.push(
+                            context,
+                            MaterialPageRoute(builder: (context) => const LearnerDictionaryScreen()),
+                          );
+                        },
+                      ),
+                    ),
+                    const SizedBox(width: 15),
+                    
+                    Expanded(
+                      child: _buildCategoryItem(
+                        'Non-Standard Measurement',
+                        const Color(0xFF90BE6D),
+                        onTap: () {
+                          Navigator.push(
+                            context,
+                            MaterialPageRoute(builder: (context) => const NonStandardMeasurementDictionaryScreen()),
+                          );
+                        },
+                      ),
+                    ),
+                  ],
+                ),
+                const SizedBox(height: 15),
+
+                Row(
+                  children: [
+                    Expanded(
+                      child: _buildCategoryItem(
+                        'Pattern',
+                        const Color(0xFF43AA8B),
+                        onTap: () {
+                          Navigator.push(
+                            context,
+                            MaterialPageRoute(builder: (context) => const PatternDictionaryScreen()),
+                          );
+                        },
+                      ),
+                    ),
+                    const SizedBox(width: 15),
+                    
+                    Expanded(
+                      child: _buildCategoryItem(
+                        'Pictograph',
+                        const Color(0xFF4D908E),
+                        onTap: () {
+                          Navigator.push(
+                            context,
+                            MaterialPageRoute(builder: (context) => const PictographDictionaryScreen()),
+                          );
+                        },
+                      ),
+                    ),
+                  ],
+                ),
+                const SizedBox(height: 15),
+
+                Row(
+                  children: [
+                    Expanded(
+                      child: _buildCategoryItem(
+                        'Probability',
+                        const Color(0xFF277DA1),
+                        onTap: () {
+                          Navigator.push(
+                            context,
+                            MaterialPageRoute(builder: (context) => const ProbabilityDictionaryScreen()),
+                          );
+                        },
+                      ),
+                    ),
+                    const SizedBox(width: 15),
+                    
+                    Expanded(
+                      child: _buildCategoryItem(
+                        'Problem Solving',
+                        const Color(0xFF577590),
+                        onTap: () {
+                          Navigator.push(
+                            context,
+                            MaterialPageRoute(builder: (context) => const ProblemSolvingDictionaryScreen()),
+                          );
+                        },
+                      ),
+                    ),
+                  ],
+                ),
+                const SizedBox(height: 15),
+
+                Row(
+                  children: [
+                    Expanded(
+                      child: _buildCategoryItem(
+                        'Ratio and Proportion',
+                        const Color(0xFFF9844A),
+                        onTap: () {
+                          Navigator.push(
+                            context,
+                            MaterialPageRoute(builder: (context) => const RatioProportionDictionaryScreen()),
+                          );
+                        },
+                      ),
+                    ),
+                    const SizedBox(width: 15),
+                    
+                    Expanded(
+                      child: _buildCategoryItem(
+                        'Square Grid',
+                        const Color(0xFFF8961E),
+                        onTap: () {
+                          Navigator.push(
+                            context,
+                            MaterialPageRoute(builder: (context) => const SquareGridDictionaryScreen()),
+                          );
+                        },
+                      ),
+                    ),
+                  ],
+                ),
+                const SizedBox(height: 15),
+
+                Row(
+                  children: [
+                    Expanded(
+                      child: _buildCategoryItem(
+                        'Standard of Units',
+                        const Color(0xFFF3722C),
+                        onTap: () {
+                          Navigator.push(
+                            context,
+                            MaterialPageRoute(builder: (context) => const StandardUnitsDictionaryScreen()),
+                          );
+                        },
+                      ),
+                    ),
+                    const SizedBox(width: 15),
+                    
+                    Expanded(
+                      child: _buildCategoryItem(
+                        'Table',
+                        const Color(0xFFF94144),
+                        onTap: () {
+                          Navigator.push(
+                            context,
+                            MaterialPageRoute(builder: (context) => const TableDictionaryScreen()),
+                          );
+                        },
+                      ),
+                    ),
+                  ],
+                ),
+                const SizedBox(height: 15),
+
+                Row(
+                  children: [
+                    Expanded(
+                      child: _buildCategoryItem(
+                        'Time',
+                        const Color(0xFF90BE6D),
+                        onTap: () {
+                          Navigator.push(
+                            context,
+                            MaterialPageRoute(builder: (context) => const TimeDictionaryScreen()),
+                          );
+                        },
+                      ),
+                    ),
+                    const SizedBox(width: 15),
+                    
+                    Expanded(
+                      child: _buildCategoryItem(
+                        '3-Dimensional Object',
+                        const Color(0xFF43AA8B),
+                        onTap: () {
+                          Navigator.push(
+                            context,
+                            MaterialPageRoute(builder: (context) => const ThreeDObjectDictionaryScreen()),
+                          );
+                        },
+                      ),
+                    ),
+                  ],
+                ),
+                const SizedBox(height: 15),
+
+                Row(
+                  children: [
+                    Expanded(
+                      child: _buildCategoryItem(
+                        '2-Dimensional Object',
+                        const Color(0xFF4D908E),
+                        onTap: () {
+                          Navigator.push(
+                            context,
+                            MaterialPageRoute(builder: (context) => const TwoDObjectDictionaryScreen()),
+                          );
+                        },
+                      ),
+                    ),
+                    const SizedBox(width: 15),
+                    
+                    Expanded(
+                      child: _buildCategoryItem(
+                        'Sequences',
+                        const Color(0xFF277DA1),
+                        onTap: () {
+                          Navigator.push(
+                            context,
+                            MaterialPageRoute(builder: (context) => const SequencesDictionaryScreen()),
+                          );
+                        },
+                      ),
+                    ),
+                  ],
+                ),
               ],
             ),
           ],
@@ -5702,13 +7226,350 @@ class SignDictionaryScreen extends StatelessWidget {
             title,
             textAlign: TextAlign.center,
             style: const TextStyle(
-              fontSize: 16,
+              fontSize: 14, // Slightly smaller for longer terms
               fontWeight: FontWeight.bold,
-              fontFamily: 'LondrinaSolid',
+              fontFamily: 'TitanOne-Regular',
             ),
           ),
         ),
       ),
+    );
+  }
+}
+
+// INDIVIDUAL DICTIONARY SCREENS FOR EACH MATHEMATICAL TERM
+class AlgebraDictionaryScreen extends StatelessWidget {
+  const AlgebraDictionaryScreen({super.key});
+
+  @override
+  Widget build(BuildContext context) {
+    return _buildDictionaryScreen(
+      context, 
+      'Algebra', 
+      const Color(0xFF9C89B8),
+      videoAsset: 'assets/videos/algebra_asl.mp4',
+    );
+  }
+}
+
+class AnalogClockDictionaryScreen extends StatelessWidget {
+  const AnalogClockDictionaryScreen({super.key});
+
+  @override
+  Widget build(BuildContext context) {
+    return _buildDictionaryScreen(
+      context, 
+      'Analog Clock', 
+      const Color(0xFFF9A1BC),
+      videoAsset: 'assets/videos/analog_clock_asl.mp4',
+    );
+  }
+}
+
+class ArithmeticOperationsDictionaryScreen extends StatelessWidget {
+  const ArithmeticOperationsDictionaryScreen({super.key});
+
+  @override
+  Widget build(BuildContext context) {
+    return _buildDictionaryScreen(
+      context, 
+      'Arithmetic Operations', 
+      const Color(0xFF90BE6D),
+      videoAsset: 'assets/videos/arithmetic_operations_asl.mp4',
+    );
+  }
+}
+
+class CalculatorDictionaryScreen extends StatelessWidget {
+  const CalculatorDictionaryScreen({super.key});
+
+  @override
+  Widget build(BuildContext context) {
+    return _buildDictionaryScreen(
+      context, 
+      'Calculator', 
+      const Color(0xFF43AA8B),
+      videoAsset: 'assets/videos/calculator_asl.mp4',
+    );
+  }
+}
+
+class ComposeNumberDictionaryScreen extends StatelessWidget {
+  const ComposeNumberDictionaryScreen({super.key});
+
+  @override
+  Widget build(BuildContext context) {
+    return _buildDictionaryScreen(
+      context, 
+      'Compose Number', 
+      const Color(0xFF4D908E),
+      videoAsset: 'assets/videos/compose_number_asl.mp4',
+    );
+  }
+}
+
+class ConvertDictionaryScreen extends StatelessWidget {
+  const ConvertDictionaryScreen({super.key});
+
+  @override
+  Widget build(BuildContext context) {
+    return _buildDictionaryScreen(
+      context, 
+      'Convert', 
+      const Color(0xFF277DA1),
+      videoAsset: 'assets/videos/convert_asl.mp4',
+    );
+  }
+}
+
+class DecomposeNumberDictionaryScreen extends StatelessWidget {
+  const DecomposeNumberDictionaryScreen({super.key});
+
+  @override
+  Widget build(BuildContext context) {
+    return _buildDictionaryScreen(
+      context, 
+      'Decompose Number', 
+      const Color(0xFF577590),
+      videoAsset: 'assets/videos/decompose_number_asl.mp4',
+    );
+  }
+}
+
+class DigitalClockDictionaryScreen extends StatelessWidget {
+  const DigitalClockDictionaryScreen({super.key});
+
+  @override
+  Widget build(BuildContext context) {
+    return _buildDictionaryScreen(
+      context, 
+      'Digital Clock', 
+      const Color(0xFFF9844A),
+      videoAsset: 'assets/videos/digital_clock_asl.mp4',
+    );
+  }
+}
+
+class GeometryDictionaryScreen extends StatelessWidget {
+  const GeometryDictionaryScreen({super.key});
+
+  @override
+  Widget build(BuildContext context) {
+    return _buildDictionaryScreen(
+      context, 
+      'Geometry', 
+      const Color(0xFFF8961E),
+      videoAsset: 'assets/videos/geometry_asl.mp4',
+    );
+  }
+}
+
+class InverseOperationDictionaryScreen extends StatelessWidget {
+  const InverseOperationDictionaryScreen({super.key});
+
+  @override
+  Widget build(BuildContext context) {
+    return _buildDictionaryScreen(
+      context, 
+      'Inverse operation', 
+      const Color(0xFFF3722C),
+      videoAsset: 'assets/videos/inverse_operation_asl.mp4',
+    );
+  }
+}
+
+class LearnerDictionaryScreen extends StatelessWidget {
+  const LearnerDictionaryScreen({super.key});
+
+  @override
+  Widget build(BuildContext context) {
+    return _buildDictionaryScreen(
+      context, 
+      'Learner', 
+      const Color(0xFFF94144),
+      videoAsset: 'assets/videos/learner_asl.mp4',
+    );
+  }
+}
+
+class NonStandardMeasurementDictionaryScreen extends StatelessWidget {
+  const NonStandardMeasurementDictionaryScreen({super.key});
+
+  @override
+  Widget build(BuildContext context) {
+    return _buildDictionaryScreen(
+      context, 
+      'Non-Standard Measurement', 
+      const Color(0xFF90BE6D),
+      videoAsset: 'assets/videos/non_standard_measurement_asl.mp4',
+    );
+  }
+}
+
+class PatternDictionaryScreen extends StatelessWidget {
+  const PatternDictionaryScreen({super.key});
+
+  @override
+  Widget build(BuildContext context) {
+    return _buildDictionaryScreen(
+      context, 
+      'Pattern', 
+      const Color(0xFF43AA8B),
+      videoAsset: 'assets/videos/pattern_asl.mp4',
+    );
+  }
+}
+
+class PictographDictionaryScreen extends StatelessWidget {
+  const PictographDictionaryScreen({super.key});
+
+  @override
+  Widget build(BuildContext context) {
+    return _buildDictionaryScreen(
+      context, 
+      'Pictograph', 
+      const Color(0xFF4D908E),
+      videoAsset: 'assets/videos/pictograph_asl.mp4',
+    );
+  }
+}
+
+class ProbabilityDictionaryScreen extends StatelessWidget {
+  const ProbabilityDictionaryScreen({super.key});
+
+  @override
+  Widget build(BuildContext context) {
+    return _buildDictionaryScreen(
+      context, 
+      'Probability', 
+      const Color(0xFF277DA1),
+      videoAsset: 'assets/videos/probability_asl.mp4',
+    );
+  }
+}
+
+class ProblemSolvingDictionaryScreen extends StatelessWidget {
+  const ProblemSolvingDictionaryScreen({super.key});
+
+  @override
+  Widget build(BuildContext context) {
+    return _buildDictionaryScreen(
+      context, 
+      'Problem Solving', 
+      const Color(0xFF577590),
+      videoAsset: 'assets/videos/problem_solving_asl.mp4',
+    );
+  }
+}
+
+class RatioProportionDictionaryScreen extends StatelessWidget {
+  const RatioProportionDictionaryScreen({super.key});
+
+  @override
+  Widget build(BuildContext context) {
+    return _buildDictionaryScreen(
+      context, 
+      'Ratio and Proportion', 
+      const Color(0xFFF9844A),
+      videoAsset: 'assets/videos/ratio_proportion_asl.mp4',
+    );
+  }
+}
+
+class SquareGridDictionaryScreen extends StatelessWidget {
+  const SquareGridDictionaryScreen({super.key});
+
+  @override
+  Widget build(BuildContext context) {
+    return _buildDictionaryScreen(
+      context, 
+      'Square Grid', 
+      const Color(0xFFF8961E),
+      videoAsset: 'assets/videos/square_grid_asl.mp4',
+    );
+  }
+}
+
+class StandardUnitsDictionaryScreen extends StatelessWidget {
+  const StandardUnitsDictionaryScreen({super.key});
+
+  @override
+  Widget build(BuildContext context) {
+    return _buildDictionaryScreen(
+      context, 
+      'Standard of Units', 
+      const Color(0xFFF3722C),
+      videoAsset: 'assets/videos/standard_units_asl.mp4',
+    );
+  }
+}
+
+class TableDictionaryScreen extends StatelessWidget {
+  const TableDictionaryScreen({super.key});
+
+  @override
+  Widget build(BuildContext context) {
+    return _buildDictionaryScreen(
+      context, 
+      'Table', 
+      const Color(0xFFF94144),
+      videoAsset: 'assets/videos/table_asl.mp4',
+    );
+  }
+}
+
+class TimeDictionaryScreen extends StatelessWidget {
+  const TimeDictionaryScreen({super.key});
+
+  @override
+  Widget build(BuildContext context) {
+    return _buildDictionaryScreen(
+      context, 
+      'Time', 
+      const Color(0xFF90BE6D),
+      videoAsset: 'assets/videos/time_asl.mp4',
+    );
+  }
+}
+
+class ThreeDObjectDictionaryScreen extends StatelessWidget {
+  const ThreeDObjectDictionaryScreen({super.key});
+
+  @override
+  Widget build(BuildContext context) {
+    return _buildDictionaryScreen(
+      context, 
+      '3-Dimensional Object', 
+      const Color(0xFF43AA8B),
+      videoAsset: 'assets/videos/3d_object_asl.mp4',
+    );
+  }
+}
+
+class TwoDObjectDictionaryScreen extends StatelessWidget {
+  const TwoDObjectDictionaryScreen({super.key});
+
+  @override
+  Widget build(BuildContext context) {
+    return _buildDictionaryScreen(
+      context, 
+      '2-Dimensional Object', 
+      const Color(0xFF4D908E),
+      videoAsset: 'assets/videos/2d_object_asl.mp4',
+    );
+  }
+}
+
+class SequencesDictionaryScreen extends StatelessWidget {
+  const SequencesDictionaryScreen({super.key});
+
+  @override
+  Widget build(BuildContext context) {
+    return _buildDictionaryScreen(
+      context, 
+      'Sequences', 
+      const Color(0xFF277DA1),
+      videoAsset: 'assets/videos/sequences_asl.mp4',
     );
   }
 }
@@ -5792,7 +7653,7 @@ class _DictionaryVideoScreenState extends State<DictionaryVideoScreen> {
           style: const TextStyle(
             fontSize: 20,
             fontWeight: FontWeight.bold,
-            fontFamily: 'LondrinaSolid',
+            fontFamily: 'TitanOne-Regular',
             color: Colors.black,
           ),
         ),
@@ -5834,7 +7695,7 @@ class _DictionaryVideoScreenState extends State<DictionaryVideoScreen> {
           'Loading video...',
           style: const TextStyle(
             fontSize: 16,
-            fontFamily: 'LondrinaSolid',
+            fontFamily: 'TitanOne-Regular',
           ),
         ),
       ],
@@ -5852,7 +7713,7 @@ class _DictionaryVideoScreenState extends State<DictionaryVideoScreen> {
           style: TextStyle(
             fontSize: 18,
             fontWeight: FontWeight.bold,
-            fontFamily: 'LondrinaSolid',
+            fontFamily: 'TitanOne-Regular',
           ),
         ),
         const SizedBox(height: 20),
@@ -5865,7 +7726,7 @@ class _DictionaryVideoScreenState extends State<DictionaryVideoScreen> {
           child: const Text(
             'Try Again',
             style: TextStyle(
-              fontFamily: 'LondrinaSolid',
+              fontFamily: 'TitanOne-Regular',
               fontWeight: FontWeight.bold,
             ),
           ),
@@ -5888,7 +7749,7 @@ class _DictionaryVideoScreenState extends State<DictionaryVideoScreen> {
                 style: TextStyle(
                   fontSize: 16,
                   fontWeight: FontWeight.bold,
-                  fontFamily: 'LondrinaSolid',
+                  fontFamily: 'TitanOne-Regular',
                 ),
               ),
               const SizedBox(width: 10),
@@ -5904,7 +7765,7 @@ class _DictionaryVideoScreenState extends State<DictionaryVideoScreen> {
                   style: const TextStyle(
                     fontSize: 14,
                     fontWeight: FontWeight.bold,
-                    fontFamily: 'LondrinaSolid',
+                    fontFamily: 'TitanOne-Regular',
                   ),
                 ),
               ),
@@ -5918,7 +7779,7 @@ class _DictionaryVideoScreenState extends State<DictionaryVideoScreen> {
                     child: Text(
                       '${speed}x',
                       style: const TextStyle(
-                        fontFamily: 'LondrinaSolid',
+                        fontFamily: 'TitanOne-Regular',
                       ),
                     ),
                   );
@@ -5995,7 +7856,7 @@ Widget _buildDictionaryScreen(BuildContext context, String title, Color color,
         style: const TextStyle(
           fontSize: 24,
           fontWeight: FontWeight.bold,
-          fontFamily: 'LondrinaSolid',
+          fontFamily: 'TitanOne-Regular',
           color: Colors.black,
         ),
       ),
@@ -6033,7 +7894,7 @@ Widget _buildDictionaryScreen(BuildContext context, String title, Color color,
                 style: const TextStyle(
                   fontSize: 16,
                   fontWeight: FontWeight.bold,
-                  fontFamily: 'LondrinaSolid',
+                  fontFamily: 'TitanOne-Regular',
                 ),
               ),
             ),
@@ -6056,7 +7917,7 @@ Widget _buildDictionaryScreen(BuildContext context, String title, Color color,
                     textAlign: TextAlign.center,
                     style: const TextStyle(
                       fontSize: 18,
-                      fontFamily: 'LondrinaSolid',
+                      fontFamily: 'TitanOne-Regular',
                     ),
                   ),
                   const SizedBox(height: 10),
@@ -6065,7 +7926,7 @@ Widget _buildDictionaryScreen(BuildContext context, String title, Color color,
                       '(Video coming soon)',
                       style: TextStyle(
                         fontSize: 14,
-                        fontFamily: 'LondrinaSolid',
+                        fontFamily: 'TitanOne-Regular',
                         color: Colors.grey,
                       ),
                     ),
