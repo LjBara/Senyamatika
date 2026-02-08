@@ -17,6 +17,10 @@ dependencies:
   shared_preferences: ^2.2.2
   google_fonts: ^5.0.0
   google_sign_in: ^6.1.5
+  webview_flutter: ^4.4.2
+  url_launcher: ^6.1.14
+  percent_indicator: ^4.2.3
+
 
 dev_dependencies:
   flutter_test:
@@ -42,37 +46,25 @@ flutter:
     - assets/images/decimal numbers.png
     - assets/images/percentage.png
     - assets/images/mensuration.png
-    - assets/images/money_100.png
-    - assets/videos/CountUpTo20.mp4
-    - assets/videos/fsl_10.mp4
-    - assets/videos/fsl_11.mp4
-    - assets/videos/fsl_12.mp4
-    - assets/videos/fsl_13.mp4
-    - assets/videos/fsl_14.mp4
-    - assets/videos/fsl_15.mp4
-    - assets/videos/fsl_16.mp4
-    - assets/videos/fsl_17.mp4
-    - assets/videos/fsl_18.mp4
-    - assets/videos/fsl_19.mp4
-    - assets/videos/fsl_20.mp4
-    - assets/videos/fraction_asl.mp4
-    - assets/videos/fraction_fsl.mp4
-    - assets/videos/heavy_asl.mp4
-    - assets/videos/height_asl.mp4
-    - assets/videos/length_asl.mp4
-    - assets/videos/sizes_asl.mp4
     - assets/images/avatar.png
     - assets/images/child_hello.png
     - assets/gif/sign-language.gif
     - assets/gif/TopicsLogo.gif
     - assets/gif/dictionary.gif
     - assets/gif/to-do-list.gif
+    - assets/gif/FirstSign.gif
+    - assets/gif/SecondSign.gif
+    - assets/gif/ThirdSign.gif
     - assets/images/to-do-list.png
     - assets/images/sign-language.png
     - assets/images/dictionary.png
     - assets/images/topics.png
-    - assets/videos/avatar.mp4
-    - assets/images/hello.png
+    - assets/images/menu.png
+    - assets/images/applogo.png
+    - assets/videos/Counting.mp4
+    - assets/videos/Compariso.mp4
+
+    
   fonts:
     - family: LondrinaSolid
       fonts:
@@ -83,3 +75,9 @@ flutter:
     - family: TitanOne-Regular
       fonts:
         - asset: assets/fonts/TitanOne-Regular.ttf
+    - family: Poppins-Regular
+      fonts:
+        - asset: assets/fonts/Poppins-Regular.ttf
+    - family: Lora-Regular
+      fonts:
+        - asset: assets/fonts/Lora-Regular.ttf      
