@@ -11,6 +11,9 @@
     <uses-permission android:name="android.permission.ACCESS_NETWORK_STATE" />
     <uses-permission android:name="android.permission.WAKE_LOCK" />
     
+    <!-- FOR URL LAUNCHER (Web browsing) -->
+    <uses-permission android:name="android.permission.INTERNET" />
+    
     <application
         android:label="SenyaMatika"
         android:name="${applicationName}"
@@ -53,6 +56,16 @@
         <!-- Essential for speech recognition services -->
         <intent>
             <action android:name="android.speech.RecognitionService" />
+        </intent>
+        
+        <!-- ADDED: FOR URL LAUNCHER (Web browsing) -->
+        <intent>
+            <action android:name="android.intent.action.VIEW" />
+            <data android:scheme="https" />
+        </intent>
+        <intent>
+            <action android:name="android.intent.action.VIEW" />
+            <data android:scheme="http" />
         </intent>
     </queries>
 </manifest>
