@@ -4,8 +4,16 @@ import 'package:speech_to_text/speech_to_text.dart' as stt;
 import 'dart:async';
 import 'dart:math';
 import 'package:url_launcher/url_launcher.dart';
+import 'package:provider/provider.dart';
 
-// ============ ENHANCED USER DATA MANAGEMENT ============
+// Local storage imports (no Firebase required!)
+import 'package:senyamatika_math_app/backend/services/local_storage_service.dart';
+import 'package:senyamatika_math_app/backend/services/local_auth_service.dart';
+import 'package:senyamatika_math_app/backend/services/database_seeder.dart';
+import 'package:senyamatika_math_app/backend/services/sign_language_service.dart';
+import 'package:senyamatika_math_app/backend/services/user_provider.dart' as backend;
+
+// ============ LEGACY USER DATA (Kept for backward compatibility) ============
 class UserData {
   String name;
   String email;
@@ -38,6 +46,7 @@ class UserData {
   }
 }
 
+// Legacy UserProvider - kept for backward compatibility
 class UserProvider {
   static UserData? _currentUser;
   static Map<String, Map<String, dynamic>> _userCredentials = {};
@@ -56,7 +65,6 @@ class UserProvider {
   
   static bool validateLogin(String email, String password) {
     final credentials = _userCredentials[email];
-    // For demo purposes, accept any login if no credentials stored
     if (_userCredentials.isEmpty) return true;
     return credentials != null && credentials['password'] == password;
   }
@@ -81,7 +89,6 @@ class UserProvider {
     return _currentUser?.section;
   }
   
-  // Update user information
   static void updateUserInfo({
     String? name,
     String? email,
@@ -96,7 +103,6 @@ class UserProvider {
         section: section ?? _currentUser!.section,
       );
       
-      // Also update in credentials if email changed
       if (email != null && email != _currentUser!.email) {
         final oldCredentials = _userCredentials[_currentUser!.email];
         if (oldCredentials != null) {
@@ -108,8 +114,32 @@ class UserProvider {
   }
 }
 
-void main() {
-  runApp(const SenyaMatikaApp());
+void main() async {
+  WidgetsFlutterBinding.ensureInitialized();
+  
+  // Initialize Local Storage (Hive)
+  try {
+    await LocalStorageService.initialize();
+    print('✅ Local database initialized successfully');
+    
+    // Seed database with default users
+    final seeder = DatabaseSeeder();
+    await seeder.seedDatabase();
+    
+    // Sign language dataset is now rule-based (numbers 0-9 available)
+    print('✅ Sign language service ready: ${SignLanguageService.getDatasetSize()} signs available');
+  } catch (e) {
+    print('⚠️ Local database initialization failed: $e');
+  }
+  
+  runApp(
+    MultiProvider(
+      providers: [
+        ChangeNotifierProvider(create: (_) => backend.UserProvider()),
+      ],
+      child: const SenyaMatikaApp(),
+    ),
+  );
 }
 
 class SenyaMatikaApp extends StatelessWidget {
@@ -256,7 +286,7 @@ class _DashboardScreenState extends State<DashboardScreen>
         'color': const Color(0xFFA7D5E4),
         'icon': Icons.face,
         'description': 'Learn mathematics through sign language',
-        'image': 'assets/videos/Avatar.mp4',
+        'image': 'assets/Videos/Avatar.mp4',
         'onTap': () {
           Navigator.push(
             context,
@@ -2300,14 +2330,14 @@ class _VideoLessonScreenState extends State<VideoLessonScreen> {
     'Whole Numbers': [
       {
         'title': 'Count Up To 20',
-        'videoUrl': 'assets/videos/Counting.mp4',
+        'videoUrl': 'assets/Videos/Counting.mp4',
         'description': 'Learn how to count from 1 to 20',
       },
     ],
     'Comparison': [
       {
         'title': 'Basic Comparison',
-        'videoUrl': 'assets/videos/Compariso.mp4',
+        'videoUrl': 'assets/Videos/Compariso.mp4',
         'description': 'Learn how to compare numbers and quantities',
       },
     ],
@@ -2317,7 +2347,7 @@ class _VideoLessonScreenState extends State<VideoLessonScreen> {
     return _lessonVideos[widget.lessonName] ?? [
       {
         'title': 'Introduction',
-        'videoUrl': 'assets/videos/default_lesson.mp4',
+        'videoUrl': 'assets/Videos/default_lesson.mp4',
         'description': 'Learn about ${widget.lessonName}',
       },
     ];
@@ -2365,7 +2395,7 @@ class _VideoLessonScreenState extends State<VideoLessonScreen> {
 
   void _initializeFallbackVideo() async {
     try {
-      _videoPlayerController = VideoPlayerController.asset('assets/videos/default_lesson.mp4');
+      _videoPlayerController = VideoPlayerController.asset('assets/Videos/default_lesson.mp4');
       await _videoPlayerController.initialize();
       setState(() {
         _isVideoInitialized = true;
@@ -21618,9 +21648,11 @@ class _CreateAccountScreenState extends State<CreateAccountScreen> {
   final TextEditingController _emailController = TextEditingController();
   final TextEditingController _passwordController = TextEditingController();
   final TextEditingController _confirmPasswordController = TextEditingController();
+  final LocalAuthService _authService = LocalAuthService();
 
   bool _isPasswordVisible = false;
   bool _isConfirmPasswordVisible = false;
+  bool _isLoading = false;
   
   // List of schools
   final List<String> _schools = [
@@ -21656,7 +21688,7 @@ class _CreateAccountScreenState extends State<CreateAccountScreen> {
   String? _selectedSchool;
   String? _selectedSection;
 
-  void _createAccount() {
+  Future<void> _createAccount() async {
     final firstName = _firstNameController.text.trim();
     final lastName = _lastNameController.text.trim();
     final email = _emailController.text.trim();
@@ -21732,6 +21764,19 @@ class _CreateAccountScreenState extends State<CreateAccountScreen> {
       return;
     }
 
+    if (password.length < 6) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text(
+            'Password must be at least 6 characters',
+            style: TextStyle(fontFamily: 'Poppins-Regular'),
+          ),
+          backgroundColor: Colors.red,
+        ),
+      );
+      return;
+    }
+
     if (password != confirmPassword) {
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
@@ -21771,42 +21816,71 @@ class _CreateAccountScreenState extends State<CreateAccountScreen> {
       return;
     }
 
-    // Save user data with full name and additional info
-    final fullName = '$firstName $lastName';
-    UserProvider.setUser(UserData(
-      name: fullName, 
-      email: email,
-      school: school,
-      section: section,
-    ));
-
-    // Save credentials for login validation
-    UserProvider.saveCredentials(email, {
-      'password': password,
-      'firstName': firstName,
-      'lastName': lastName,
-      'school': school,
-      'section': section,
+    // Show loading
+    setState(() {
+      _isLoading = true;
     });
 
-    // Simulate account creation
-    ScaffoldMessenger.of(context).showSnackBar(
-      SnackBar(
-        content: Text(
-          'Account created successfully!',
-          style: TextStyle(fontFamily: 'Poppins-Regular', fontWeight: FontWeight.bold),
-        ),
-        backgroundColor: Colors.green,
-        duration: const Duration(seconds: 2),
-      ),
-    );
-
-    Future.delayed(const Duration(milliseconds: 1500), () {
-      Navigator.pushReplacement(
-        context,
-        MaterialPageRoute(builder: (context) => const DashboardScreen()),
+    try {
+      // Register user in database
+      final fullName = '$firstName $lastName';
+      final user = await _authService.registerWithEmail(
+        email: email,
+        password: password,
+        name: fullName,
+        school: school,
+        section: section,
       );
-    });
+
+      if (user != null) {
+        // Save user data in provider
+        UserProvider.setUser(UserData(
+          name: fullName,
+          email: email,
+          school: school,
+          section: section,
+        ));
+
+        if (mounted) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(
+              content: Text(
+                'Account created successfully!',
+                style: TextStyle(fontFamily: 'Poppins-Regular', fontWeight: FontWeight.bold),
+              ),
+              backgroundColor: Colors.green,
+              duration: const Duration(seconds: 2),
+            ),
+          );
+
+          Future.delayed(const Duration(milliseconds: 1500), () {
+            if (mounted) {
+              Navigator.pushReplacement(
+                context,
+                MaterialPageRoute(builder: (context) => const DashboardScreen()),
+              );
+            }
+          });
+        }
+      }
+    } catch (e) {
+      if (mounted) {
+        setState(() {
+          _isLoading = false;
+        });
+
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text(
+              e.toString().replaceAll('Exception: ', ''),
+              style: TextStyle(fontFamily: 'Poppins-Regular'),
+            ),
+            backgroundColor: Colors.red,
+            duration: const Duration(seconds: 3),
+          ),
+        );
+      }
+    }
   }
 
   @override
@@ -22078,15 +22152,24 @@ class _CreateAccountScreenState extends State<CreateAccountScreen> {
                               elevation: 5,
                               shadowColor: Colors.black.withOpacity(0.2),
                             ),
-                            onPressed: _createAccount,
-                            child: Text(
-                              'Create Account',
-                              style: TextStyle(
-                                fontSize: 20,
-                                fontWeight: FontWeight.bold,
-                                fontFamily: 'Lora-Regular',
-                              ),
-                            ),
+                            onPressed: _isLoading ? null : _createAccount,
+                            child: _isLoading
+                                ? const SizedBox(
+                                    height: 20,
+                                    width: 20,
+                                    child: CircularProgressIndicator(
+                                      strokeWidth: 2,
+                                      valueColor: AlwaysStoppedAnimation<Color>(Colors.black),
+                                    ),
+                                  )
+                                : Text(
+                                    'Create Account',
+                                    style: TextStyle(
+                                      fontSize: 20,
+                                      fontWeight: FontWeight.bold,
+                                      fontFamily: 'Lora-Regular',
+                                    ),
+                                  ),
                           ),
                         ),
                         
@@ -22319,10 +22402,12 @@ class _LogInScreenState extends State<LogInScreen> {
   // ADD THESE CONTROLLERS
   final TextEditingController _emailController = TextEditingController();
   final TextEditingController _passwordController = TextEditingController();
+  final LocalAuthService _authService = LocalAuthService();
 
   bool _isPasswordVisible = false;
+  bool _isLoading = false;
 
-  void _logIn() {
+  Future<void> _logIn() async {
     final email = _emailController.text.trim();
     final password = _passwordController.text;
 
@@ -22366,29 +22451,67 @@ class _LogInScreenState extends State<LogInScreen> {
       return;
     }
 
-    // For demo purposes, create a dummy user
-    UserProvider.setUser(UserData(
-      name: email.split('@').first,
-      email: email,
-    ));
-
-    ScaffoldMessenger.of(context).showSnackBar(
-      SnackBar(
-        content: Text(
-          'Logged in successfully!',
-          style: TextStyle(fontFamily: 'Poppins-Regular', fontWeight: FontWeight.bold),
-        ),
-        backgroundColor: Colors.green,
-        duration: const Duration(seconds: 2),
-      ),
-    );
-
-    Future.delayed(const Duration(milliseconds: 1500), () {
-      Navigator.pushReplacement(
-        context,
-        MaterialPageRoute(builder: (context) => const DashboardScreen()),
-      );
+    // Show loading
+    setState(() {
+      _isLoading = true;
     });
+
+    try {
+      // Authenticate with database
+      final user = await _authService.signInWithEmail(
+        email: email,
+        password: password,
+      );
+
+      if (user != null) {
+        // Set user in provider
+        UserProvider.setUser(UserData(
+          name: user.name,
+          email: user.email,
+          school: user.school,
+          section: user.section,
+        ));
+
+        if (mounted) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(
+              content: Text(
+                'Logged in successfully!',
+                style: TextStyle(fontFamily: 'Poppins-Regular', fontWeight: FontWeight.bold),
+              ),
+              backgroundColor: Colors.green,
+              duration: const Duration(seconds: 2),
+            ),
+          );
+
+          Future.delayed(const Duration(milliseconds: 1500), () {
+            if (mounted) {
+              Navigator.pushReplacement(
+                context,
+                MaterialPageRoute(builder: (context) => const DashboardScreen()),
+              );
+            }
+          });
+        }
+      }
+    } catch (e) {
+      if (mounted) {
+        setState(() {
+          _isLoading = false;
+        });
+
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text(
+              e.toString().replaceAll('Exception: ', ''),
+              style: TextStyle(fontFamily: 'Poppins-Regular'),
+            ),
+            backgroundColor: Colors.red,
+            duration: const Duration(seconds: 3),
+          ),
+        );
+      }
+    }
   }
 
   @override
@@ -22622,15 +22745,24 @@ class _LogInScreenState extends State<LogInScreen> {
                               elevation: 5,
                               shadowColor: Colors.black.withOpacity(0.2),
                             ),
-                            onPressed: _logIn,
-                            child: Text(
-                              'Log In',
-                              style: TextStyle(
-                                fontSize: 20,
-                                fontWeight: FontWeight.bold,
-                                fontFamily: 'Lora-Regular',
-                              ),
-                            ),
+                            onPressed: _isLoading ? null : _logIn,
+                            child: _isLoading
+                                ? const SizedBox(
+                                    height: 20,
+                                    width: 20,
+                                    child: CircularProgressIndicator(
+                                      strokeWidth: 2,
+                                      valueColor: AlwaysStoppedAnimation<Color>(Colors.black),
+                                    ),
+                                  )
+                                : Text(
+                                    'Log In',
+                                    style: TextStyle(
+                                      fontSize: 20,
+                                      fontWeight: FontWeight.bold,
+                                      fontFamily: 'Lora-Regular',
+                                    ),
+                                  ),
                           ),
                         ),
                         
@@ -25337,6 +25469,12 @@ class _SignLanguageAvatarScreenState extends State<SignLanguageAvatarScreen> {
   final stt.SpeechToText _speech = stt.SpeechToText();
   bool _isListening = false;
   String _recognizedText = '';
+  String _translationMessage = ''; // Store translation message
+  List<String> _signSequence = []; // Store sequence of signs to play
+  int _currentSignIndex = 0; // Current sign being played
+  List<VideoPlayerController> _preloadedControllers = []; // All preloaded controllers
+  VideoPlayerController? _currentController; // Currently playing controller
+  VideoPlayerController? _idleController; // Idle state controller (paused at first frame)
   final TextEditingController _textController = TextEditingController();
   bool _speechAvailable = false;
   bool _isInitializing = true;
@@ -25346,46 +25484,183 @@ class _SignLanguageAvatarScreenState extends State<SignLanguageAvatarScreen> {
   bool _isAvatarLoading = false;
   bool _hasAvatarError = false;
   bool _hasUserInput = false; // Track if user has provided input
+  bool _isTranslating = false; // Track if translating
+  bool _isPlayingSequence = false; // Track if playing video sequence
   
-  // ============ GIF ROTATION SYSTEM ============
-  int _gifCounter = 0; // Tracks number of inputs
-  final List<String> _gifAssets = [
-    'assets/gif/FirstSign.gif',
-    'assets/gif/SecondSign.gif',
-    'assets/gif/ThirdSign.gif',
-  ];
+  // ============ SIGN LANGUAGE ANIMATION SYSTEM ============
   
-  // Current GIF to display
-  String get _currentGif {
-    if (_gifAssets.isEmpty) return 'assets/gif/SignTutor.gif'; // Fallback
-    
-    // Calculate which GIF to show based on counter
-    final index = _gifCounter % _gifAssets.length;
-    return _gifAssets[index];
-  }
-  
-  // Method to handle text input and rotate GIF
-  void _handleTextInput(String text) {
+  // Method to handle text input and translate to sign language
+  void _handleTextInput(String text) async {
     if (text.trim().isNotEmpty) {
-      // Set flag that user has provided input
       setState(() {
         _hasUserInput = true;
-        _gifCounter++;
         _isAvatarLoading = true;
+        _isTranslating = true;
+        _translationMessage = '';
+        _signSequence = [];
+        _currentSignIndex = 0;
       });
       
-      // Play the appropriate GIF animation
-      _playAvatarAnimation(text);
+      // Clean up old controllers
+      _disposeAllControllers();
+      
+      // Translate to sign language sequence
+      final sequence = SignLanguageService.translateToSignSequence(text);
+      
+      if (mounted) {
+        setState(() {
+          _signSequence = sequence;
+          _isTranslating = false;
+        });
+        
+        if (sequence.isNotEmpty) {
+          _translationMessage = 'Loading ${sequence.length} sign(s)...';
+          setState(() {});
+          
+          // Preload ALL videos first
+          await _preloadAllVideos();
+          
+          if (mounted && _preloadedControllers.isNotEmpty) {
+            setState(() {
+              _translationMessage = 'Playing ${sequence.length} sign(s) for: "$text"';
+            });
+            _playSignSequence();
+          }
+        } else {
+          setState(() {
+            _translationMessage = 'No signs available for: "$text"';
+            _isAvatarLoading = false;
+          });
+        }
+      }
     }
   }
-  // ============ END GIF ROTATION SYSTEM ============
+  
+  // Preload ALL videos before playing
+  Future<void> _preloadAllVideos() async {
+    debugPrint('📥 Preloading ${_signSequence.length} videos...');
+    
+    for (int i = 0; i < _signSequence.length; i++) {
+      final videoPath = _signSequence[i];
+      debugPrint('📥 Loading video ${i + 1}/${_signSequence.length}: $videoPath');
+      
+      try {
+        final controller = VideoPlayerController.asset(videoPath);
+        await controller.initialize();
+        await controller.setPlaybackSpeed(1.5);
+        _preloadedControllers.add(controller);
+        debugPrint('✅ Loaded video ${i + 1}/${_signSequence.length}');
+      } catch (e) {
+        debugPrint('❌ Error loading video ${i + 1}: $e');
+      }
+    }
+    
+    debugPrint('✅ All videos preloaded: ${_preloadedControllers.length}/${_signSequence.length}');
+  }
+  
+  // Play the sequence of preloaded videos
+  void _playSignSequence() {
+    if (_preloadedControllers.isEmpty) return;
+    
+    setState(() {
+      _isPlayingSequence = true;
+      _currentSignIndex = 0;
+      _isAvatarLoading = false;
+    });
+    
+    _playNextPreloadedVideo();
+  }
+  
+  // Play the next preloaded video
+  void _playNextPreloadedVideo() async {
+    if (_currentSignIndex >= _preloadedControllers.length) {
+      // Sequence complete
+      setState(() {
+        _isPlayingSequence = false;
+        _translationMessage = 'Completed ${_signSequence.length} sign(s)';
+      });
+      return;
+    }
+    
+    // Get the next controller
+    final nextController = _preloadedControllers[_currentSignIndex];
+    debugPrint('🎬 Playing preloaded sign ${_currentSignIndex + 1}/${_preloadedControllers.length}');
+    
+    // Remove listener from previous controller
+    _currentController?.removeListener(_onVideoProgress);
+    
+    // Seek to start to ensure it's ready
+    await nextController.seekTo(Duration.zero);
+    
+    // Switch to next controller
+    _currentController = nextController;
+    
+    // Listen for video completion
+    _currentController!.addListener(_onVideoProgress);
+    
+    // Update UI with the new controller
+    if (mounted) {
+      setState(() {});
+    }
+    
+    // Start playing immediately
+    await _currentController!.play();
+  }
+  
+  // Monitor video progress
+  void _onVideoProgress() {
+    if (_currentController == null) return;
+    
+    if (_currentController!.value.position >= _currentController!.value.duration &&
+        _currentController!.value.duration > Duration.zero) {
+      // Video finished, remove listener and play next
+      _currentController!.removeListener(_onVideoProgress);
+      _currentSignIndex++;
+      _playNextPreloadedVideo();
+    }
+  }
+  
+  // Dispose all controllers
+  void _disposeAllControllers() {
+    _currentController?.removeListener(_onVideoProgress);
+    for (var controller in _preloadedControllers) {
+      controller.dispose();
+    }
+    _preloadedControllers.clear();
+    _currentController = null;
+  }
+  
+  @override
+  void dispose() {
+    _disposeAllControllers();
+    _idleController?.dispose();
+    _speech.cancel();
+    _cancelTimer();
+    _textController.dispose();
+    super.dispose();
+  }
+  // ============ END SIGN LANGUAGE ANIMATION SYSTEM ============
 
   @override
   void initState() {
     super.initState();
+    _initializeIdleVideo();
     Future.delayed(const Duration(milliseconds: 500), () {
       _initSpeech();
     });
+  }
+
+  Future<void> _initializeIdleVideo() async {
+    try {
+      _idleController = VideoPlayerController.asset('assets/DataSet/Numbers/1s/sign-0.webm');
+      await _idleController!.initialize();
+      await _idleController!.setLooping(false);
+      // Pause at first frame
+      await _idleController!.seekTo(Duration.zero);
+      setState(() {});
+    } catch (e) {
+      print('❌ Error initializing idle video: $e');
+    }
   }
 
   Future<void> _initSpeech() async {
@@ -25545,32 +25820,6 @@ class _SignLanguageAvatarScreenState extends State<SignLanguageAvatarScreen> {
     }
   }
 
-  void _playAvatarAnimation(String text) {
-    if (!mounted) return;
-    
-    // Simple snackbar message
-    ScaffoldMessenger.of(context).showSnackBar(
-      SnackBar(
-        content: Text(
-          'Translating to sign language...',
-          style: TextStyle(fontFamily: 'Poppins-Regular'),
-        ),
-        duration: const Duration(seconds: 2),
-        backgroundColor: Colors.green,
-        behavior: SnackBarBehavior.floating,
-      ),
-    );
-    
-    // Reset loading after a short delay (to show loading spinner)
-    Future.delayed(const Duration(milliseconds: 500), () {
-      if (mounted) {
-        setState(() {
-          _isAvatarLoading = false;
-        });
-      }
-    });
-  }
-
   void _showReminderSnackBar(String message) {
     if (mounted) {
       ScaffoldMessenger.of(context).showSnackBar(
@@ -25624,177 +25873,254 @@ class _SignLanguageAvatarScreenState extends State<SignLanguageAvatarScreen> {
         ),
       ),
       body: SafeArea(
-        child: Column(
+        child: Stack(
           children: [
-            const SizedBox(height: 20),
-
-            Expanded(
-              child: Center(
-                child: Stack(
-                  children: [
-                    // ============ Avatar Display ============
-                    SizedBox(
-                      width: 300,
-                      height: 300,
-                      child: _buildAvatar(),
-                    ),
-                    
-                    // SPEECH INITIALIZING OVERLAY
-                    if (_isInitializing)
-                      Positioned.fill(
-                        child: Container(
-                          color: const Color.fromRGBO(0, 0, 0, 0.3),
-                          child: const Center(
-                            child: Column(
-                              mainAxisAlignment: MainAxisAlignment.center,
-                              children: [
-                                CircularProgressIndicator(
-                                  color: Colors.yellow,
+            // ============ AVATAR BACKGROUND (Full screen, close bust shot) ============
+            Positioned.fill(
+              child: Column(
+                children: [
+                  const SizedBox(height: 20),
+                  
+                  // TRANSLATION MESSAGE DISPLAY
+                  if (_translationMessage.isNotEmpty)
+                    Container(
+                      margin: const EdgeInsets.symmetric(horizontal: 20, vertical: 10),
+                      padding: const EdgeInsets.all(16),
+                      decoration: BoxDecoration(
+                        color: _signSequence.isNotEmpty 
+                            ? const Color(0xFFC8E6C9) // Green tint for success
+                            : const Color(0xFFFFCDD2), // Red tint for not found
+                        borderRadius: BorderRadius.circular(12),
+                        border: Border.all(color: Colors.black, width: 2),
+                      ),
+                      child: Column(
+                        children: [
+                          Row(
+                            children: [
+                              Icon(
+                                _signSequence.isNotEmpty ? Icons.play_circle : Icons.info,
+                                color: _signSequence.isNotEmpty ? Colors.green : Colors.orange,
+                              ),
+                              const SizedBox(width: 12),
+                              Expanded(
+                                child: Text(
+                                  _translationMessage,
+                                  style: TextStyle(
+                                    fontFamily: 'Poppins-Regular',
+                                    fontSize: 14,
+                                    color: Colors.black87,
+                                  ),
                                 ),
-                              ],
+                              ),
+                            ],
+                          ),
+                          if (_isPlayingSequence && _signSequence.isNotEmpty)
+                            Padding(
+                              padding: const EdgeInsets.only(top: 8),
+                              child: LinearProgressIndicator(
+                                value: (_currentSignIndex + 1) / _signSequence.length,
+                                backgroundColor: Colors.grey[300],
+                                valueColor: AlwaysStoppedAnimation<Color>(Colors.green),
+                              ),
+                            ),
+                        ],
+                      ),
+                    ),
+                  
+                  // ============ AVATAR DISPLAY (Larger, close bust shot) ============
+                  Expanded(
+                    child: Stack(
+                      alignment: Alignment.center,
+                      children: [
+                        // Avatar container - fills entire space
+                        Positioned.fill(
+                          child: _buildAvatar(),
+                        ),
+                        
+                        // SPEECH INITIALIZING OVERLAY
+                        if (_isInitializing)
+                          Positioned.fill(
+                            child: Container(
+                              color: const Color.fromRGBO(0, 0, 0, 0.3),
+                              child: const Center(
+                                child: Column(
+                                  mainAxisAlignment: MainAxisAlignment.center,
+                                  children: [
+                                    CircularProgressIndicator(
+                                      color: Colors.yellow,
+                                    ),
+                                  ],
+                                ),
+                              ),
                             ),
                           ),
-                        ),
-                      ),
-                    
-                    // LISTENING OVERLAY
-                    if (_isListening)
-                      Positioned.fill(
-                        child: Container(
-                          color: const Color.fromRGBO(0, 0, 0, 0.3),
-                          child: Center(
-                            child: Column(
-                              mainAxisAlignment: MainAxisAlignment.center,
-                              children: [
-                                AnimatedContainer(
-                                  duration: const Duration(milliseconds: 300),
-                                  padding: const EdgeInsets.all(20),
-                                  decoration: BoxDecoration(
-                                    color: Colors.red.withAlpha((0.8 * 255).round()),
-                                    shape: BoxShape.circle,
-                                  ),
-                                  child: const Icon(
-                                    Icons.mic,
-                                    size: 40,
-                                    color: Colors.white,
-                                  ),
-                                ),
-                                
-                                if (_recognizedText.isNotEmpty)
-                                  Container(
-                                    margin: const EdgeInsets.all(10),
-                                    padding: const EdgeInsets.all(10),
-                                    decoration: BoxDecoration(
-                                      color: const Color.fromRGBO(0, 0, 0, 0.5),
-                                      borderRadius: BorderRadius.circular(10),
-                                    ),
-                                    child: Text(
-                                      '"$_recognizedText"',
-                                      style: TextStyle(
-                                        color: Colors.white,
-                                        fontSize: 14,
-                                        fontStyle: FontStyle.italic,
-                                        fontFamily: 'Poppins-Regular',
+                        
+                        // LISTENING OVERLAY
+                        if (_isListening)
+                          Positioned.fill(
+                            child: Container(
+                              color: const Color.fromRGBO(0, 0, 0, 0.3),
+                              child: Center(
+                                child: Column(
+                                  mainAxisAlignment: MainAxisAlignment.center,
+                                  children: [
+                                    AnimatedContainer(
+                                      duration: const Duration(milliseconds: 300),
+                                      padding: const EdgeInsets.all(20),
+                                      decoration: BoxDecoration(
+                                        color: Colors.red.withAlpha((0.8 * 255).round()),
+                                        shape: BoxShape.circle,
                                       ),
-                                      textAlign: TextAlign.center,
+                                      child: const Icon(
+                                        Icons.mic,
+                                        size: 40,
+                                        color: Colors.white,
+                                      ),
                                     ),
-                                  ),
-                              ],
+                                    
+                                    if (_recognizedText.isNotEmpty)
+                                      Container(
+                                        margin: const EdgeInsets.all(10),
+                                        padding: const EdgeInsets.all(10),
+                                        decoration: BoxDecoration(
+                                          color: const Color.fromRGBO(0, 0, 0, 0.5),
+                                          borderRadius: BorderRadius.circular(10),
+                                        ),
+                                        child: Text(
+                                          '"$_recognizedText"',
+                                          style: TextStyle(
+                                            color: Colors.white,
+                                            fontSize: 14,
+                                            fontStyle: FontStyle.italic,
+                                            fontFamily: 'Poppins-Regular',
+                                          ),
+                                          textAlign: TextAlign.center,
+                                        ),
+                                      ),
+                                  ],
+                                ),
+                              ),
                             ),
                           ),
-                        ),
-                      ),
-                  ],
-                ),
+                      ],
+                    ),
+                  ),
+                ],
               ),
             ),
-
-            // TEXT INPUT FIELD WITH CONTROLS
-            Padding(
-              padding: const EdgeInsets.all(16),
+            
+            // ============ INPUT BOX OVERLAY (Bottom, over avatar's lower body) ============
+            Positioned(
+              left: 0,
+              right: 0,
+              bottom: 0,
               child: Container(
-                padding: const EdgeInsets.symmetric(horizontal: 16),
-                height: 56,
                 decoration: BoxDecoration(
-                  color: Colors.white,
-                  borderRadius: BorderRadius.circular(30),
-                  border: Border.all(color: Colors.black12),
-                  boxShadow: [
-                    BoxShadow(
-                      color: const Color.fromRGBO(0, 0, 0, 0.1),
-                      blurRadius: 5,
-                      offset: const Offset(0, 2),
-                    ),
-                  ],
+                  gradient: LinearGradient(
+                    begin: Alignment.topCenter,
+                    end: Alignment.bottomCenter,
+                    colors: [
+                      Colors.white.withOpacity(0.0),
+                      Colors.white.withOpacity(0.7),
+                      Colors.white,
+                    ],
+                  ),
                 ),
-                child: Row(
+                child: Column(
+                  mainAxisSize: MainAxisSize.min,
                   children: [
-                    Expanded(
-                      child: TextField(
-                        controller: _textController,
-                        decoration: InputDecoration(
-                          hintText: _speechAvailable 
-                              ? 'Type or speak to translate...' 
-                              : 'Speech not available. Type here...',
-                          border: InputBorder.none,
-                          hintStyle: TextStyle(
-                            color: _speechAvailable ? Colors.grey : Colors.grey[400],
-                            fontFamily: 'Poppins-Regular',
-                          ),
+                    const SizedBox(height: 40), // Gradient fade area
+                    
+                    // TEXT INPUT FIELD WITH CONTROLS
+                    Padding(
+                      padding: const EdgeInsets.symmetric(horizontal: 16),
+                      child: Container(
+                        padding: const EdgeInsets.symmetric(horizontal: 16),
+                        height: 56,
+                        decoration: BoxDecoration(
+                          color: Colors.white,
+                          borderRadius: BorderRadius.circular(30),
+                          border: Border.all(color: Colors.black12),
+                          boxShadow: [
+                            BoxShadow(
+                              color: const Color.fromRGBO(0, 0, 0, 0.15),
+                              blurRadius: 10,
+                              offset: const Offset(0, 2),
+                            ),
+                          ],
                         ),
-                        onChanged: (value) {
-                          setState(() {
-                            _recognizedText = value;
-                          });
-                        },
-                        onSubmitted: (value) {
-                          if (value.trim().isNotEmpty) {
-                            _sendText();
-                          }
-                        },
-                        style: TextStyle(fontFamily: 'Poppins-Regular'),
+                        child: Row(
+                          children: [
+                            Expanded(
+                              child: TextField(
+                                controller: _textController,
+                                decoration: InputDecoration(
+                                  hintText: _speechAvailable 
+                                      ? 'Type or speak to translate...' 
+                                      : 'Speech not available. Type here...',
+                                  border: InputBorder.none,
+                                  hintStyle: TextStyle(
+                                    color: _speechAvailable ? Colors.grey : Colors.grey[400],
+                                    fontFamily: 'Poppins-Regular',
+                                  ),
+                                ),
+                                onChanged: (value) {
+                                  setState(() {
+                                    _recognizedText = value;
+                                  });
+                                },
+                                onSubmitted: (value) {
+                                  if (value.trim().isNotEmpty) {
+                                    _sendText();
+                                  }
+                                },
+                                style: TextStyle(fontFamily: 'Poppins-Regular'),
+                              ),
+                            ),
+                            const SizedBox(width: 8),
+                            
+                            // SEND BUTTON
+                            if (_textController.text.trim().isNotEmpty)
+                              IconButton(
+                                icon: const Icon(Icons.send, color: Colors.blue),
+                                onPressed: _sendText,
+                                tooltip: 'Translate text to sign language',
+                              ),
+                            
+                            // MICROPHONE BUTTON
+                            IconButton(
+                              icon: Icon(
+                                _isListening ? Icons.mic_off : Icons.mic,
+                                color: _isListening ? Colors.red : 
+                                       _speechAvailable ? Colors.blue : Colors.grey,
+                                size: 28,
+                              ),
+                              onPressed: _speechAvailable ? _toggleListening : null,
+                              tooltip: _isListening 
+                                ? 'Stop listening' 
+                                : 'Start speaking',
+                            ),
+                          ],
+                        ),
                       ),
                     ),
-                    const SizedBox(width: 8),
                     
-                    // SEND BUTTON
-                    if (_textController.text.trim().isNotEmpty)
-                      IconButton(
-                        icon: const Icon(Icons.send, color: Colors.blue),
-                        onPressed: _sendText,
-                        tooltip: 'Translate text to sign language',
+                    // INSTRUCTION TEXT
+                    Padding(
+                      padding: const EdgeInsets.only(top: 12, bottom: 16, left: 16, right: 16),
+                      child: Text(
+                        _speechAvailable 
+                            ? 'Tap the microphone and speak, or type text to translate'
+                            : 'Speech recognition is not available. Please type your text.',
+                        textAlign: TextAlign.center,
+                        style: TextStyle(
+                          color: _speechAvailable ? Colors.green : Colors.orange,
+                          fontSize: 12,
+                          fontFamily: 'Poppins-Regular',
+                        ),
                       ),
-                    
-                    // MICROPHONE BUTTON
-                    IconButton(
-                      icon: Icon(
-                        _isListening ? Icons.mic_off : Icons.mic,
-                        color: _isListening ? Colors.red : 
-                               _speechAvailable ? Colors.blue : Colors.grey,
-                        size: 28,
-                      ),
-                      onPressed: _speechAvailable ? _toggleListening : null,
-                      tooltip: _isListening 
-                        ? 'Stop listening' 
-                        : 'Start speaking',
                     ),
                   ],
-                ),
-              ),
-            ),
-
-            // INSTRUCTION TEXT
-            Padding(
-              padding: const EdgeInsets.only(bottom: 16, left: 16, right: 16),
-              child: Text(
-                _speechAvailable 
-                    ? 'Tap the microphone and speak, or type text to translate'
-                    : 'Speech recognition is not available. Please type your text.',
-                textAlign: TextAlign.center,
-                style: TextStyle(
-                  color: _speechAvailable ? Colors.green : Colors.orange,
-                  fontSize: 12,
-                  fontFamily: 'Poppins-Regular',
                 ),
               ),
             ),
@@ -25815,65 +26141,86 @@ class _SignLanguageAvatarScreenState extends State<SignLanguageAvatarScreen> {
       },
       child: Stack(
         children: [
-          // ============ Static Image when no input ============
-          if (!_hasUserInput)
-            Container(
-              width: 300,
-              height: 300,
-              decoration: BoxDecoration(
-                color: const Color(0xFFA8D5E3),
-                borderRadius: BorderRadius.circular(150),
-                border: Border.all(color: Colors.black, width: 2),
-                boxShadow: [
-                  BoxShadow(
-                    color: Colors.black.withOpacity(0.1),
-                    blurRadius: 8,
-                    offset: const Offset(0, 4),
+          // ============ Static Video when no input (idle state) ============
+          if (!_hasUserInput && _idleController != null && _idleController!.value.isInitialized)
+            SizedBox(
+              width: double.infinity,
+              height: double.infinity,
+              child: ClipRect(
+                child: Align(
+                  alignment: Alignment.topCenter,
+                  child: Transform.scale(
+                    scale: 1.5, // Reduced scale to show head
+                    child: Transform.translate(
+                      offset: const Offset(0, 150), // Move down to show head to waist
+                      child: SizedBox(
+                        width: _idleController!.value.size.width,
+                        height: _idleController!.value.size.height,
+                        child: VideoPlayer(_idleController!),
+                      ),
+                    ),
                   ),
-                ],
-              ),
-              child: const Center(
-                child: Icon(
-                  Icons.person,
-                  size: 100,
-                  color: Colors.white,
                 ),
               ),
             ),
           
-          // ============ GIF Animation when user has input ============
-          if (_hasUserInput && !_hasAvatarError && !_isAvatarLoading)
-            Image.asset(
-              _currentGif,
-              width: 300,
-              height: 300,
-              fit: BoxFit.contain,
-              gaplessPlayback: true,
-              frameBuilder: (context, child, frame, wasSynchronouslyLoaded) {
-                if (wasSynchronouslyLoaded) {
-                  return child;
-                }
-                
-                if (frame == null) {
-                  return Container(
-                    width: 300,
-                    height: 300,
-                    color: Colors.white,
-                  );
-                }
-                
-                return child;
-              },
-              errorBuilder: (context, error, stackTrace) {
-                if (mounted) {
-                  setState(() {
-                    _hasAvatarError = true;
-                    _isAvatarLoading = false;
-                  });
-                }
-                
-                return _buildFallbackAvatar();
-              },
+          // ============ Video Player when playing sequence ============
+          if (_hasUserInput && !_hasAvatarError && !_isAvatarLoading && _currentController != null && _currentController!.value.isInitialized)
+            SizedBox(
+              width: double.infinity,
+              height: double.infinity,
+              child: ClipRect(
+                child: Align(
+                  alignment: Alignment.topCenter,
+                  child: Transform.scale(
+                    scale: 1.8, // Reduced scale to show head
+                    child: Transform.translate(
+                      offset: const Offset(0, 150), // Move down to show head to waist
+                      child: SizedBox(
+                        width: _currentController!.value.size.width,
+                        height: _currentController!.value.size.height,
+                        child: VideoPlayer(_currentController!),
+                      ),
+                    ),
+                  ),
+                ),
+              ),
+            ),
+          
+          // Show message when no sign found
+          if (_hasUserInput && !_isAvatarLoading && !_isTranslating && _signSequence.isEmpty)
+            Container(
+              width: 500,
+              height: 500,
+              decoration: BoxDecoration(
+                color: const Color(0xFFFFF59D).withOpacity(0.3),
+                border: Border.all(color: Colors.black, width: 2),
+              ),
+              child: Center(
+                child: Column(
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  children: [
+                    Icon(
+                      Icons.search_off,
+                      size: 80,
+                      color: Colors.orange,
+                    ),
+                    const SizedBox(height: 16),
+                    Padding(
+                      padding: const EdgeInsets.symmetric(horizontal: 20),
+                      child: Text(
+                        'Sign not found in dataset',
+                        style: TextStyle(
+                          fontFamily: 'Poppins-Regular',
+                          fontSize: 18,
+                          color: Colors.black87,
+                        ),
+                        textAlign: TextAlign.center,
+                      ),
+                    ),
+                  ],
+                ),
+              ),
             ),
           
           // LOADING OVERLAY (shows when loading new GIF)
@@ -25884,6 +26231,37 @@ class _SignLanguageAvatarScreenState extends State<SignLanguageAvatarScreen> {
                 child: const Center(
                   child: CircularProgressIndicator(
                     color: Colors.yellow,
+                  ),
+                ),
+              ),
+            ),
+          
+          // TRANSLATING OVERLAY
+          if (_isTranslating)
+            Positioned.fill(
+              child: Container(
+                decoration: BoxDecoration(
+                  color: const Color(0xFFA8D5E3),
+                  border: Border.all(color: Colors.black, width: 2),
+                ),
+                child: const Center(
+                  child: Column(
+                    mainAxisAlignment: MainAxisAlignment.center,
+                    children: [
+                      CircularProgressIndicator(
+                        color: Colors.yellow,
+                      ),
+                      SizedBox(height: 16),
+                      Text(
+                        'Translating...',
+                        style: TextStyle(
+                          fontFamily: 'Poppins-Regular',
+                          fontSize: 16,
+                          fontWeight: FontWeight.bold,
+                          color: Colors.white,
+                        ),
+                      ),
+                    ],
                   ),
                 ),
               ),
@@ -25910,11 +26288,10 @@ class _SignLanguageAvatarScreenState extends State<SignLanguageAvatarScreen> {
 
   Widget _buildFallbackAvatar() {
     return Container(
-      width: 300,
-      height: 300,
+      width: 500,
+      height: 500,
       decoration: BoxDecoration(
         color: const Color(0xFFA8D5E3),
-        borderRadius: BorderRadius.circular(150),
         border: Border.all(color: Colors.black, width: 2),
         boxShadow: [
           BoxShadow(
@@ -25927,20 +26304,10 @@ class _SignLanguageAvatarScreenState extends State<SignLanguageAvatarScreen> {
       child: const Center(
         child: Icon(
           Icons.person,
-          size: 100,
+          size: 150,
           color: Colors.white,
         ),
       ),
     );
-  }
-
-  @override
-  void dispose() {
-    if (_isListening) {
-      _speech.stop();
-    }
-    _cancelTimer();
-    _textController.dispose();
-    super.dispose();
   }
 }
