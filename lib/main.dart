@@ -12,6 +12,7 @@ import 'package:senyamatika_math_app/backend/services/local_auth_service.dart';
 import 'package:senyamatika_math_app/backend/services/database_seeder.dart';
 import 'package:senyamatika_math_app/backend/services/sign_language_service.dart';
 import 'package:senyamatika_math_app/backend/services/user_provider.dart' as backend;
+import 'package:senyamatika_math_app/backend/services/api_service.dart';
 
 // ============ LEGACY USER DATA (Kept for backward compatibility) ============
 class UserData {
@@ -2879,6 +2880,25 @@ class ProgressManager {
         (_progressData['overall_stats']!['total_videos_watched'] as int) + 1;
     
     _updateProgressPercentage();
+    
+    // Sync to backend
+    _syncVideoToBackend(lessonName, videoTitle);
+  }
+
+  Future<void> _syncVideoToBackend(String lessonName, String videoTitle) async {
+    if (ApiService.getToken() == null) return;
+    
+    try {
+      await ApiService.saveProgress(
+        topic: lessonName,
+        lessonId: videoTitle,
+        completed: true,
+        timeSpent: 0,
+      );
+      print('✓ Video progress synced to server: $lessonName - $videoTitle');
+    } catch (e) {
+      print('Failed to sync video progress: $e');
+    }
   }
 
   void recordExerciseScore(String lessonName, String language, int subLessonIndex, 
@@ -2917,6 +2937,28 @@ class ProgressManager {
         totalExercises > 0 ? (totalScore / totalExercises).toDouble() : 0.0;
     
     _updateProgressPercentage();
+    
+    // Sync to backend
+    _syncExerciseToBackend(lessonName, exerciseType, score, totalQuestions, percentage);
+  }
+
+  Future<void> _syncExerciseToBackend(String lessonName, String exerciseType, 
+                                      int score, int totalQuestions, double percentage) async {
+    if (ApiService.getToken() == null) return;
+    
+    try {
+      await ApiService.saveProgress(
+        topic: lessonName,
+        lessonId: exerciseType,
+        score: score,
+        maxScore: totalQuestions,
+        completed: percentage >= 70,
+        timeSpent: 0,
+      );
+      print('✓ Exercise progress synced to server: $lessonName - $exerciseType ($score/$totalQuestions)');
+    } catch (e) {
+      print('Failed to sync exercise progress: $e');
+    }
   }
 
   List<Map<String, dynamic>> getExerciseScoresByLesson(String lessonName) {
@@ -19600,6 +19642,19 @@ class SignDictionaryScreen extends StatelessWidget {
             
             Column(
               children: [
+                // NEW: Numbers & Operators Category (using actual dataset)
+                _buildCategoryItem(
+                  'Numbers & Operators',
+                  const Color(0xFFFEDA5F),
+                  onTap: () {
+                    Navigator.push(
+                      context,
+                      MaterialPageRoute(builder: (context) => const NumbersOperatorsDictionaryScreen()),
+                    );
+                  },
+                ),
+                const SizedBox(height: 15),
+                
                 Row(
                   children: [
                     Expanded(
@@ -20179,20 +20234,6 @@ class SignDictionaryScreen extends StatelessWidget {
 }
 
 // INDIVIDUAL DICTIONARY SCREENS FOR EACH MATHEMATICAL TERM
-class AlgebraDictionaryScreen extends StatelessWidget {
-  const AlgebraDictionaryScreen({super.key});
-
-  @override
-  Widget build(BuildContext context) {
-    return _buildDictionaryScreen(
-      context, 
-      'Algebra', 
-      const Color(0xFF9C89B8),
-      videoAsset: 'assets/videos/algebra_asl.mp4',
-    );
-  }
-}
-
 class AnalogClockDictionaryScreen extends StatelessWidget {
   const AnalogClockDictionaryScreen({super.key});
 
@@ -20212,11 +20253,48 @@ class ArithmeticOperationsDictionaryScreen extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return _buildDictionaryScreen(
-      context, 
-      'Arithmetic Operations', 
-      const Color(0xFF90BE6D),
-      videoAsset: 'assets/videos/arithmetic_operations_asl.mp4',
+    final Map<String, String> operationTerms = {
+      'Fundamental Operation': 'assets/DataSet/Dictionary/sign-fundamental-operation.webm',
+      'Increase': 'assets/DataSet/Dictionary/sign-increase.webm',
+      'Decrease': 'assets/DataSet/Dictionary/sign-decrease.webm',
+      'Greatest': 'assets/DataSet/Dictionary/sign-greatest.webm',
+      'Least': 'assets/DataSet/Dictionary/sign-least.webm',
+    };
+
+    return Scaffold(
+      backgroundColor: Colors.white,
+      appBar: AppBar(
+        backgroundColor: Colors.white,
+        leading: IconButton(
+          icon: const Icon(Icons.arrow_back, color: Colors.black),
+          onPressed: () => Navigator.pop(context),
+        ),
+        title: const Text(
+          'Arithmetic Operations',
+          style: TextStyle(
+            fontSize: 22,
+            fontWeight: FontWeight.bold,
+            fontFamily: 'Lora-Regular',
+            color: Colors.black,
+          ),
+        ),
+        centerTitle: true,
+        elevation: 0,
+      ),
+      body: GridView.builder(
+        padding: const EdgeInsets.all(16),
+        gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
+          crossAxisCount: 2,
+          crossAxisSpacing: 15,
+          mainAxisSpacing: 15,
+          childAspectRatio: 0.85,
+        ),
+        itemCount: operationTerms.length,
+        itemBuilder: (context, index) {
+          final entry = operationTerms.entries.elementAt(index);
+          return _buildTermCard(context, entry.key, entry.value, const Color(0xFF90BE6D));
+        },
+      ),
     );
   }
 }
@@ -20254,11 +20332,44 @@ class ConvertDictionaryScreen extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return _buildDictionaryScreen(
-      context, 
-      'Convert', 
-      const Color(0xFF277DA1),
-      videoAsset: 'assets/videos/convert_asl.mp4',
+    final Map<String, String> convertTerms = {
+      'Convert': 'assets/DataSet/Dictionary/sign-convert.webm',
+    };
+
+    return Scaffold(
+      backgroundColor: Colors.white,
+      appBar: AppBar(
+        backgroundColor: Colors.white,
+        leading: IconButton(
+          icon: const Icon(Icons.arrow_back, color: Colors.black),
+          onPressed: () => Navigator.pop(context),
+        ),
+        title: const Text(
+          'Convert',
+          style: TextStyle(
+            fontSize: 22,
+            fontWeight: FontWeight.bold,
+            fontFamily: 'Lora-Regular',
+            color: Colors.black,
+          ),
+        ),
+        centerTitle: true,
+        elevation: 0,
+      ),
+      body: GridView.builder(
+        padding: const EdgeInsets.all(16),
+        gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
+          crossAxisCount: 2,
+          crossAxisSpacing: 15,
+          mainAxisSpacing: 15,
+          childAspectRatio: 0.85,
+        ),
+        itemCount: convertTerms.length,
+        itemBuilder: (context, index) {
+          final entry = convertTerms.entries.elementAt(index);
+          return _buildTermCard(context, entry.key, entry.value, const Color(0xFF277DA1));
+        },
+      ),
     );
   }
 }
@@ -20324,11 +20435,45 @@ class LearnerDictionaryScreen extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return _buildDictionaryScreen(
-      context, 
-      'Learner', 
-      const Color(0xFFF94144),
-      videoAsset: 'assets/videos/learner_asl.mp4',
+    final Map<String, String> learnerTerms = {
+      'Math': 'assets/DataSet/Dictionary/sign-math.webm',
+      'Number': 'assets/DataSet/Dictionary/sign-number.webm',
+    };
+
+    return Scaffold(
+      backgroundColor: Colors.white,
+      appBar: AppBar(
+        backgroundColor: Colors.white,
+        leading: IconButton(
+          icon: const Icon(Icons.arrow_back, color: Colors.black),
+          onPressed: () => Navigator.pop(context),
+        ),
+        title: const Text(
+          'Learner',
+          style: TextStyle(
+            fontSize: 22,
+            fontWeight: FontWeight.bold,
+            fontFamily: 'Lora-Regular',
+            color: Colors.black,
+          ),
+        ),
+        centerTitle: true,
+        elevation: 0,
+      ),
+      body: GridView.builder(
+        padding: const EdgeInsets.all(16),
+        gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
+          crossAxisCount: 2,
+          crossAxisSpacing: 15,
+          mainAxisSpacing: 15,
+          childAspectRatio: 0.85,
+        ),
+        itemCount: learnerTerms.length,
+        itemBuilder: (context, index) {
+          final entry = learnerTerms.entries.elementAt(index);
+          return _buildTermCard(context, entry.key, entry.value, const Color(0xFFF94144));
+        },
+      ),
     );
   }
 }
@@ -20881,19 +21026,354 @@ Widget _buildDictionaryScreen(BuildContext context, String title, Color color,
   );
 }
 
+
+// ============ NUMBERS & OPERATORS DICTIONARY SCREEN (USING ACTUAL DATASET) ============
+class NumbersOperatorsDictionaryScreen extends StatefulWidget {
+  const NumbersOperatorsDictionaryScreen({super.key});
+
+  @override
+  State<NumbersOperatorsDictionaryScreen> createState() => _NumbersOperatorsDictionaryScreenState();
+}
+
+class _NumbersOperatorsDictionaryScreenState extends State<NumbersOperatorsDictionaryScreen> {
+  String _selectedCategory = 'All';
+  final List<String> _categories = ['All', 'Ones (0-9)', 'Tens', 'Hundreds', 'Thousands', 'Operators'];
+
+  @override
+  Widget build(BuildContext context) {
+    final allSigns = SignLanguageService.getAllSigns();
+    
+    // Filter signs based on selected category
+    Map<String, String> filteredSigns = {};
+    if (_selectedCategory == 'All') {
+      filteredSigns = allSigns;
+    } else if (_selectedCategory == 'Ones (0-9)') {
+      filteredSigns = Map.fromEntries(
+        allSigns.entries.where((e) => e.key.contains('Number') && int.tryParse(e.key.split(' ').last) != null && int.parse(e.key.split(' ').last) < 10)
+      );
+    } else if (_selectedCategory == 'Tens') {
+      filteredSigns = Map.fromEntries(
+        allSigns.entries.where((e) => e.key.contains('Number') && e.key.split(' ').last.length == 2 && e.key.split(' ').last.endsWith('0'))
+      );
+    } else if (_selectedCategory == 'Hundreds') {
+      filteredSigns = Map.fromEntries(
+        allSigns.entries.where((e) => e.key.contains('Number') && e.key.split(' ').last.length == 3)
+      );
+    } else if (_selectedCategory == 'Thousands') {
+      filteredSigns = Map.fromEntries(
+        allSigns.entries.where((e) => e.key.contains('Number') && e.key.split(' ').last.length == 4)
+      );
+    } else if (_selectedCategory == 'Operators') {
+      filteredSigns = Map.fromEntries(
+        allSigns.entries.where((e) => !e.key.contains('Number'))
+      );
+    }
+
+    return Scaffold(
+      backgroundColor: Colors.white,
+      appBar: AppBar(
+        backgroundColor: Colors.white,
+        leading: IconButton(
+          icon: const Icon(Icons.arrow_back, color: Colors.black),
+          onPressed: () => Navigator.pop(context),
+        ),
+        title: const Text(
+          'Numbers & Operators',
+          style: TextStyle(
+            fontSize: 22,
+            fontWeight: FontWeight.bold,
+            fontFamily: 'Lora-Regular',
+            color: Colors.black,
+          ),
+        ),
+        centerTitle: true,
+        elevation: 0,
+      ),
+      body: Column(
+        children: [
+          // Category filter
+          Container(
+            height: 50,
+            margin: const EdgeInsets.symmetric(vertical: 10),
+            child: ListView.builder(
+              scrollDirection: Axis.horizontal,
+              padding: const EdgeInsets.symmetric(horizontal: 16),
+              itemCount: _categories.length,
+              itemBuilder: (context, index) {
+                final category = _categories[index];
+                final isSelected = category == _selectedCategory;
+                return GestureDetector(
+                  onTap: () {
+                    setState(() {
+                      _selectedCategory = category;
+                    });
+                  },
+                  child: Container(
+                    margin: const EdgeInsets.only(right: 10),
+                    padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 10),
+                    decoration: BoxDecoration(
+                      color: isSelected ? const Color(0xFFFEDA5F) : Colors.grey[200],
+                      borderRadius: BorderRadius.circular(20),
+                      border: Border.all(
+                        color: isSelected ? Colors.black : Colors.grey[300]!,
+                        width: 2,
+                      ),
+                    ),
+                    child: Center(
+                      child: Text(
+                        category,
+                        style: TextStyle(
+                          fontSize: 14,
+                          fontWeight: isSelected ? FontWeight.bold : FontWeight.normal,
+                          color: Colors.black,
+                          fontFamily: 'Poppins-Regular',
+                        ),
+                      ),
+                    ),
+                  ),
+                );
+              },
+            ),
+          ),
+          
+          // Grid of signs
+          Expanded(
+            child: GridView.builder(
+              padding: const EdgeInsets.all(16),
+              gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
+                crossAxisCount: 2,
+                crossAxisSpacing: 15,
+                mainAxisSpacing: 15,
+                childAspectRatio: 0.85,
+              ),
+              itemCount: filteredSigns.length,
+              itemBuilder: (context, index) {
+                final entry = filteredSigns.entries.elementAt(index);
+                return _buildSignCard(entry.key, entry.value);
+              },
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildSignCard(String label, String videoPath) {
+    return GestureDetector(
+      onTap: () {
+        Navigator.push(
+          context,
+          MaterialPageRoute(
+            builder: (context) => DictionaryVideoScreen(
+              title: label,
+              videoAsset: videoPath,
+              backgroundColor: Colors.white,
+            ),
+          ),
+        );
+      },
+      child: Container(
+        decoration: BoxDecoration(
+          color: const Color(0xFFA8D5E3),
+          borderRadius: BorderRadius.circular(15),
+          border: Border.all(color: Colors.black, width: 2),
+          boxShadow: [
+            BoxShadow(
+              color: Colors.black.withOpacity(0.15),
+              blurRadius: 8,
+              offset: const Offset(0, 4),
+            ),
+          ],
+        ),
+        child: Column(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            const Icon(
+              Icons.play_circle_outline,
+              size: 60,
+              color: Colors.black54,
+            ),
+            const SizedBox(height: 12),
+            Padding(
+              padding: const EdgeInsets.symmetric(horizontal: 8),
+              child: Text(
+                label,
+                textAlign: TextAlign.center,
+                style: const TextStyle(
+                  fontSize: 16,
+                  fontWeight: FontWeight.bold,
+                  color: Colors.black,
+                  fontFamily: 'Poppins-Regular',
+                ),
+                maxLines: 2,
+                overflow: TextOverflow.ellipsis,
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+}
+
+
+
 // INDIVIDUAL DICTIONARY SCREENS
 class FractionDictionaryScreen extends StatelessWidget {
   const FractionDictionaryScreen({super.key});
 
   @override
   Widget build(BuildContext context) {
-    return _buildDictionaryScreen(
-      context, 
-      'Fraction', 
-      const Color(0xFFA8D5E3),
-      videoAsset: 'assets/videos/fraction_asl.mp4',
+    final Map<String, String> fractionTerms = {
+      'Fraction': 'assets/DataSet/Dictionary/sign-fraction.webm',
+      'Numerator': 'assets/DataSet/Dictionary/sign-numerator.webm',
+      'Denominator': 'assets/DataSet/Dictionary/sign-denominator.webm',
+      'Decimal Number': 'assets/DataSet/Dictionary/sign-decimal-number.webm',
+    };
+
+    return Scaffold(
+      backgroundColor: Colors.white,
+      appBar: AppBar(
+        backgroundColor: Colors.white,
+        leading: IconButton(
+          icon: const Icon(Icons.arrow_back, color: Colors.black),
+          onPressed: () => Navigator.pop(context),
+        ),
+        title: const Text(
+          'Fraction',
+          style: TextStyle(
+            fontSize: 22,
+            fontWeight: FontWeight.bold,
+            fontFamily: 'Lora-Regular',
+            color: Colors.black,
+          ),
+        ),
+        centerTitle: true,
+        elevation: 0,
+      ),
+      body: GridView.builder(
+        padding: const EdgeInsets.all(16),
+        gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
+          crossAxisCount: 2,
+          crossAxisSpacing: 15,
+          mainAxisSpacing: 15,
+          childAspectRatio: 0.85,
+        ),
+        itemCount: fractionTerms.length,
+        itemBuilder: (context, index) {
+          final entry = fractionTerms.entries.elementAt(index);
+          return _buildTermCard(context, entry.key, entry.value, const Color(0xFFA8D5E3));
+        },
+      ),
     );
   }
+}
+
+class AlgebraDictionaryScreen extends StatelessWidget {
+  const AlgebraDictionaryScreen({super.key});
+
+  @override
+  Widget build(BuildContext context) {
+    final Map<String, String> algebraTerms = {
+      'Algebra': 'assets/DataSet/Dictionary/sign-algebra.webm',
+      'Equation': 'assets/DataSet/Dictionary/sign-equation.webm',
+      'Number Value': 'assets/DataSet/Dictionary/sign-number-value.webm',
+    };
+
+    return Scaffold(
+      backgroundColor: Colors.white,
+      appBar: AppBar(
+        backgroundColor: Colors.white,
+        leading: IconButton(
+          icon: const Icon(Icons.arrow_back, color: Colors.black),
+          onPressed: () => Navigator.pop(context),
+        ),
+        title: const Text(
+          'Algebra',
+          style: TextStyle(
+            fontSize: 22,
+            fontWeight: FontWeight.bold,
+            fontFamily: 'Lora-Regular',
+            color: Colors.black,
+          ),
+        ),
+        centerTitle: true,
+        elevation: 0,
+      ),
+      body: GridView.builder(
+        padding: const EdgeInsets.all(16),
+        gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
+          crossAxisCount: 2,
+          crossAxisSpacing: 15,
+          mainAxisSpacing: 15,
+          childAspectRatio: 0.85,
+        ),
+        itemCount: algebraTerms.length,
+        itemBuilder: (context, index) {
+          final entry = algebraTerms.entries.elementAt(index);
+          return _buildTermCard(context, entry.key, entry.value, const Color(0xFF9C89B8));
+        },
+      ),
+    );
+  }
+}
+
+// Helper function to build term cards
+Widget _buildTermCard(BuildContext context, String label, String videoPath, Color backgroundColor) {
+  return GestureDetector(
+    onTap: () {
+      Navigator.push(
+        context,
+        MaterialPageRoute(
+          builder: (context) => DictionaryVideoScreen(
+            title: label,
+            videoAsset: videoPath,
+            backgroundColor: Colors.white,
+          ),
+        ),
+      );
+    },
+    child: Container(
+      decoration: BoxDecoration(
+        color: backgroundColor,
+        borderRadius: BorderRadius.circular(15),
+        border: Border.all(color: Colors.black, width: 2),
+        boxShadow: [
+          BoxShadow(
+            color: Colors.black.withOpacity(0.15),
+            blurRadius: 8,
+            offset: const Offset(0, 4),
+          ),
+        ],
+      ),
+      child: Column(
+        mainAxisAlignment: MainAxisAlignment.center,
+        children: [
+          const Icon(
+            Icons.play_circle_outline,
+            size: 60,
+            color: Colors.black54,
+          ),
+          const SizedBox(height: 12),
+          Padding(
+            padding: const EdgeInsets.symmetric(horizontal: 8),
+            child: Text(
+              label,
+              textAlign: TextAlign.center,
+              style: const TextStyle(
+                fontSize: 16,
+                fontWeight: FontWeight.bold,
+                color: Colors.black,
+                fontFamily: 'Poppins-Regular',
+              ),
+              maxLines: 2,
+              overflow: TextOverflow.ellipsis,
+            ),
+          ),
+        ],
+      ),
+    ),
+  );
 }
 
 class HeavyDictionaryScreen extends StatelessWidget {
@@ -21824,6 +22304,66 @@ class _CreateAccountScreenState extends State<CreateAccountScreen> {
     try {
       // Register user in database
       final fullName = '$firstName $lastName';
+      
+      // Try backend API first
+      try {
+        final apiResult = await ApiService.register(
+          email: email,
+          password: password,
+          name: fullName,
+          school: school,
+          section: section,
+        );
+
+        if (apiResult['success']) {
+          // Save token
+          ApiService.setToken(apiResult['data']['token']);
+          
+          // Also save to local storage as backup
+          await _authService.registerWithEmail(
+            email: email,
+            password: password,
+            name: fullName,
+            school: school,
+            section: section,
+          );
+
+          if (mounted) {
+            // Save user data in provider
+            UserProvider.setUser(UserData(
+              name: fullName,
+              email: email,
+              school: school,
+              section: section,
+            ));
+
+            ScaffoldMessenger.of(context).showSnackBar(
+              SnackBar(
+                content: Text(
+                  'Account created successfully! (Synced to server)',
+                  style: TextStyle(fontFamily: 'Poppins-Regular', fontWeight: FontWeight.bold),
+                ),
+                backgroundColor: Colors.green,
+                duration: const Duration(seconds: 2),
+              ),
+            );
+
+            Future.delayed(const Duration(milliseconds: 1500), () {
+              if (mounted) {
+                Navigator.pushReplacement(
+                  context,
+                  MaterialPageRoute(builder: (context) => const DashboardScreen()),
+                );
+              }
+            });
+          }
+          return;
+        }
+      } catch (apiError) {
+        print('Backend API unavailable, using local storage: $apiError');
+      }
+
+      // Fallback to local storage only
       final user = await _authService.registerWithEmail(
         email: email,
         password: password,
@@ -21845,10 +22385,10 @@ class _CreateAccountScreenState extends State<CreateAccountScreen> {
           ScaffoldMessenger.of(context).showSnackBar(
             SnackBar(
               content: Text(
-                'Account created successfully!',
+                'Account created successfully! (Local only)',
                 style: TextStyle(fontFamily: 'Poppins-Regular', fontWeight: FontWeight.bold),
               ),
-              backgroundColor: Colors.green,
+              backgroundColor: Colors.orange,
               duration: const Duration(seconds: 2),
             ),
           );
@@ -22457,7 +22997,71 @@ class _LogInScreenState extends State<LogInScreen> {
     });
 
     try {
-      // Authenticate with database
+      // Try backend API first
+      try {
+        final apiResult = await ApiService.login(
+          email: email,
+          password: password,
+        );
+
+        if (apiResult['success']) {
+          // Save token
+          ApiService.setToken(apiResult['data']['token']);
+          final userData = apiResult['data']['user'];
+          
+          // Also authenticate locally as backup
+          await _authService.signInWithEmail(
+            email: email,
+            password: password,
+          );
+
+          // Load progress from backend
+          try {
+            final progressResult = await ApiService.getProgress();
+            if (progressResult['success']) {
+              // TODO: Merge backend progress with local
+              print('Loaded ${progressResult['data']['progress'].length} progress items from server');
+            }
+          } catch (e) {
+            print('Could not load progress from server: $e');
+          }
+
+          if (mounted) {
+            // Set user in provider
+            UserProvider.setUser(UserData(
+              name: userData['name'],
+              email: userData['email'],
+              school: userData['school'],
+              section: userData['section'],
+            ));
+
+            ScaffoldMessenger.of(context).showSnackBar(
+              SnackBar(
+                content: Text(
+                  'Logged in successfully! (Synced with server)',
+                  style: TextStyle(fontFamily: 'Poppins-Regular', fontWeight: FontWeight.bold),
+                ),
+                backgroundColor: Colors.green,
+                duration: const Duration(seconds: 2),
+              ),
+            );
+
+            Future.delayed(const Duration(milliseconds: 1500), () {
+              if (mounted) {
+                Navigator.pushReplacement(
+                  context,
+                  MaterialPageRoute(builder: (context) => const DashboardScreen()),
+                );
+              }
+            });
+          }
+          return;
+        }
+      } catch (apiError) {
+        print('Backend API unavailable, using local storage: $apiError');
+      }
+
+      // Fallback to local authentication
       final user = await _authService.signInWithEmail(
         email: email,
         password: password,
@@ -22476,10 +23080,10 @@ class _LogInScreenState extends State<LogInScreen> {
           ScaffoldMessenger.of(context).showSnackBar(
             SnackBar(
               content: Text(
-                'Logged in successfully!',
+                'Logged in successfully! (Local only)',
                 style: TextStyle(fontFamily: 'Poppins-Regular', fontWeight: FontWeight.bold),
               ),
-              backgroundColor: Colors.green,
+              backgroundColor: Colors.orange,
               duration: const Duration(seconds: 2),
             ),
           );
@@ -25491,47 +26095,53 @@ class _SignLanguageAvatarScreenState extends State<SignLanguageAvatarScreen> {
   
   // Method to handle text input and translate to sign language
   void _handleTextInput(String text) async {
-    if (text.trim().isNotEmpty) {
+    if (text.trim().isEmpty) return;
+    
+    // Prevent spam - ignore if already playing or translating
+    if (_isPlayingSequence || _isTranslating || _isAvatarLoading) {
+      debugPrint('⚠️ Already processing, ignoring duplicate request');
+      return;
+    }
+    
+    setState(() {
+      _hasUserInput = true;
+      _isAvatarLoading = true;
+      _isTranslating = true;
+      _translationMessage = '';
+      _signSequence = [];
+      _currentSignIndex = 0;
+    });
+    
+    // Clean up old controllers
+    _disposeAllControllers();
+    
+    // Translate to sign language sequence
+    final sequence = SignLanguageService.translateToSignSequence(text);
+    
+    if (mounted) {
       setState(() {
-        _hasUserInput = true;
-        _isAvatarLoading = true;
-        _isTranslating = true;
-        _translationMessage = '';
-        _signSequence = [];
-        _currentSignIndex = 0;
+        _signSequence = sequence;
+        _isTranslating = false;
       });
       
-      // Clean up old controllers
-      _disposeAllControllers();
-      
-      // Translate to sign language sequence
-      final sequence = SignLanguageService.translateToSignSequence(text);
-      
-      if (mounted) {
-        setState(() {
-          _signSequence = sequence;
-          _isTranslating = false;
-        });
+      if (sequence.isNotEmpty) {
+        _translationMessage = 'Loading ${sequence.length} sign(s)...';
+        setState(() {});
         
-        if (sequence.isNotEmpty) {
-          _translationMessage = 'Loading ${sequence.length} sign(s)...';
-          setState(() {});
-          
-          // Preload ALL videos first
-          await _preloadAllVideos();
-          
-          if (mounted && _preloadedControllers.isNotEmpty) {
-            setState(() {
-              _translationMessage = 'Playing ${sequence.length} sign(s) for: "$text"';
-            });
-            _playSignSequence();
-          }
-        } else {
+        // Preload ALL videos first
+        await _preloadAllVideos();
+        
+        if (mounted && _preloadedControllers.isNotEmpty) {
           setState(() {
-            _translationMessage = 'No signs available for: "$text"';
-            _isAvatarLoading = false;
+            _translationMessage = 'Playing ${sequence.length} sign(s) for: "$text"';
           });
+          _playSignSequence();
         }
+      } else {
+        setState(() {
+          _translationMessage = 'No signs available for: "$text"';
+          _isAvatarLoading = false;
+        });
       }
     }
   }
@@ -26139,149 +26749,152 @@ class _SignLanguageAvatarScreenState extends State<SignLanguageAvatarScreen> {
           _handleTextInput(text);
         }
       },
-      child: Stack(
-        children: [
-          // ============ Static Video when no input (idle state) ============
-          if (!_hasUserInput && _idleController != null && _idleController!.value.isInitialized)
-            SizedBox(
-              width: double.infinity,
-              height: double.infinity,
-              child: ClipRect(
-                child: Align(
-                  alignment: Alignment.topCenter,
-                  child: Transform.scale(
-                    scale: 1.5, // Reduced scale to show head
-                    child: Transform.translate(
-                      offset: const Offset(0, 150), // Move down to show head to waist
-                      child: SizedBox(
-                        width: _idleController!.value.size.width,
-                        height: _idleController!.value.size.height,
-                        child: VideoPlayer(_idleController!),
-                      ),
-                    ),
-                  ),
-                ),
-              ),
-            ),
-          
-          // ============ Video Player when playing sequence ============
-          if (_hasUserInput && !_hasAvatarError && !_isAvatarLoading && _currentController != null && _currentController!.value.isInitialized)
-            SizedBox(
-              width: double.infinity,
-              height: double.infinity,
-              child: ClipRect(
-                child: Align(
-                  alignment: Alignment.topCenter,
-                  child: Transform.scale(
-                    scale: 1.8, // Reduced scale to show head
-                    child: Transform.translate(
-                      offset: const Offset(0, 150), // Move down to show head to waist
-                      child: SizedBox(
-                        width: _currentController!.value.size.width,
-                        height: _currentController!.value.size.height,
-                        child: VideoPlayer(_currentController!),
-                      ),
-                    ),
-                  ),
-                ),
-              ),
-            ),
-          
-          // Show message when no sign found
-          if (_hasUserInput && !_isAvatarLoading && !_isTranslating && _signSequence.isEmpty)
-            Container(
-              width: 500,
-              height: 500,
-              decoration: BoxDecoration(
-                color: const Color(0xFFFFF59D).withOpacity(0.3),
-                border: Border.all(color: Colors.black, width: 2),
-              ),
-              child: Center(
-                child: Column(
-                  mainAxisAlignment: MainAxisAlignment.center,
-                  children: [
-                    Icon(
-                      Icons.search_off,
-                      size: 80,
-                      color: Colors.orange,
-                    ),
-                    const SizedBox(height: 16),
-                    Padding(
-                      padding: const EdgeInsets.symmetric(horizontal: 20),
-                      child: Text(
-                        'Sign not found in dataset',
-                        style: TextStyle(
-                          fontFamily: 'Poppins-Regular',
-                          fontSize: 18,
-                          color: Colors.black87,
+      child: Container(
+        color: Colors.white, // White background for video
+        child: Stack(
+          children: [
+            // ============ Static Video when no input (idle state) ============
+            if (!_hasUserInput && _idleController != null && _idleController!.value.isInitialized)
+              SizedBox(
+                width: double.infinity,
+                height: double.infinity,
+                child: ClipRect(
+                  child: Align(
+                    alignment: Alignment.topCenter,
+                    child: Transform.scale(
+                      scale: 1.4, // Reduced scale to prevent going out of frame
+                      child: Transform.translate(
+                        offset: const Offset(0, 150), // Move down to show head to waist
+                        child: SizedBox(
+                          width: _idleController!.value.size.width,
+                          height: _idleController!.value.size.height,
+                          child: VideoPlayer(_idleController!),
                         ),
-                        textAlign: TextAlign.center,
                       ),
                     ),
-                  ],
-                ),
-              ),
-            ),
-          
-          // LOADING OVERLAY (shows when loading new GIF)
-          if (_hasUserInput && _isAvatarLoading)
-            Positioned.fill(
-              child: Container(
-                color: Colors.white,
-                child: const Center(
-                  child: CircularProgressIndicator(
-                    color: Colors.yellow,
                   ),
                 ),
               ),
-            ),
-          
-          // TRANSLATING OVERLAY
-          if (_isTranslating)
-            Positioned.fill(
-              child: Container(
+            
+            // ============ Video Player when playing sequence ============
+            if (_hasUserInput && !_hasAvatarError && !_isAvatarLoading && _currentController != null && _currentController!.value.isInitialized)
+              SizedBox(
+                width: double.infinity,
+                height: double.infinity,
+                child: ClipRect(
+                  child: Align(
+                    alignment: Alignment.topCenter,
+                    child: Transform.scale(
+                      scale: 1.65, // Reduced scale to prevent going out of frame
+                      child: Transform.translate(
+                        offset: const Offset(0, 150), // Move down to show head to waist
+                        child: SizedBox(
+                          width: _currentController!.value.size.width,
+                          height: _currentController!.value.size.height,
+                          child: VideoPlayer(_currentController!),
+                        ),
+                      ),
+                    ),
+                  ),
+                ),
+              ),
+            
+            // Show message when no sign found
+            if (_hasUserInput && !_isAvatarLoading && !_isTranslating && _signSequence.isEmpty)
+              Container(
+                width: 500,
+                height: 500,
                 decoration: BoxDecoration(
-                  color: const Color(0xFFA8D5E3),
+                  color: const Color(0xFFFFF59D).withOpacity(0.3),
                   border: Border.all(color: Colors.black, width: 2),
                 ),
-                child: const Center(
+                child: Center(
                   child: Column(
                     mainAxisAlignment: MainAxisAlignment.center,
                     children: [
-                      CircularProgressIndicator(
-                        color: Colors.yellow,
+                      Icon(
+                        Icons.search_off,
+                        size: 80,
+                        color: Colors.orange,
                       ),
-                      SizedBox(height: 16),
-                      Text(
-                        'Translating...',
-                        style: TextStyle(
-                          fontFamily: 'Poppins-Regular',
-                          fontSize: 16,
-                          fontWeight: FontWeight.bold,
-                          color: Colors.white,
+                      const SizedBox(height: 16),
+                      Padding(
+                        padding: const EdgeInsets.symmetric(horizontal: 20),
+                        child: Text(
+                          'Sign not found in dataset',
+                          style: TextStyle(
+                            fontFamily: 'Poppins-Regular',
+                            fontSize: 18,
+                            color: Colors.black87,
+                          ),
+                          textAlign: TextAlign.center,
                         ),
                       ),
                     ],
                   ),
                 ),
               ),
-            ),
-          
-          // ERROR OVERLAY
-          if (_hasUserInput && _hasAvatarError && !_isAvatarLoading)
-            Positioned.fill(
-              child: Container(
-                color: Colors.white,
-                child: const Center(
-                  child: Icon(
-                    Icons.error_outline,
-                    size: 60,
-                    color: Colors.red,
+            
+            // LOADING OVERLAY (shows when loading new GIF)
+            if (_hasUserInput && _isAvatarLoading)
+              Positioned.fill(
+                child: Container(
+                  color: Colors.white,
+                  child: const Center(
+                    child: CircularProgressIndicator(
+                      color: Colors.yellow,
+                    ),
                   ),
                 ),
               ),
-            ),
-        ],
+            
+            // TRANSLATING OVERLAY
+            if (_isTranslating)
+              Positioned.fill(
+                child: Container(
+                  decoration: BoxDecoration(
+                    color: const Color(0xFFA8D5E3),
+                    border: Border.all(color: Colors.black, width: 2),
+                  ),
+                  child: const Center(
+                    child: Column(
+                      mainAxisAlignment: MainAxisAlignment.center,
+                      children: [
+                        CircularProgressIndicator(
+                          color: Colors.yellow,
+                        ),
+                        SizedBox(height: 16),
+                        Text(
+                          'Translating...',
+                          style: TextStyle(
+                            fontFamily: 'Poppins-Regular',
+                            fontSize: 16,
+                            fontWeight: FontWeight.bold,
+                            color: Colors.white,
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                ),
+              ),
+            
+            // ERROR OVERLAY
+            if (_hasUserInput && _hasAvatarError && !_isAvatarLoading)
+              Positioned.fill(
+                child: Container(
+                  color: Colors.white,
+                  child: const Center(
+                    child: Icon(
+                      Icons.error_outline,
+                      size: 60,
+                      color: Colors.red,
+                    ),
+                  ),
+                ),
+              ),
+          ],
+        ),
       ),
     );
   }

@@ -73,9 +73,98 @@ class SignLanguageService {
 
   // Dataset mapping for words (to be added later)
   static final Map<String, String> _wordSigns = {
-    // 'hello': 'assets/DataSet/Dictionary/sign-hello.webm',
-    // 'thank you': 'assets/DataSet/Dictionary/sign-thankyou.webm',
+    // Numbers as words
+    'zero': 'assets/DataSet/Numbers/1s/sign-0.webm',
+    'one': 'assets/DataSet/Numbers/1s/sign-1.webm',
+    'two': 'assets/DataSet/Numbers/1s/sign-2.webm',
+    'three': 'assets/DataSet/Numbers/1s/sign-3.webm',
+    'four': 'assets/DataSet/Numbers/1s/sign-4.webm',
+    'five': 'assets/DataSet/Numbers/1s/sign-5.webm',
+    'six': 'assets/DataSet/Numbers/1s/sign-6.webm',
+    'seven': 'assets/DataSet/Numbers/1s/sign-7.webm',
+    'eight': 'assets/DataSet/Numbers/1s/sign-8.webm',
+    'nine': 'assets/DataSet/Numbers/1s/sign-9.webm',
+    // Operators as words
+    'plus': 'assets/DataSet/Operators/sign-plus.webm',
+    'add': 'assets/DataSet/Operators/sign-plus.webm',
+    'minus': 'assets/DataSet/Operators/sign-minus.webm',
+    'subtract': 'assets/DataSet/Operators/sign-minus.webm',
+    'times': 'assets/DataSet/Operators/sign-multiply.webm',
+    'multiply': 'assets/DataSet/Operators/sign-multiply.webm',
+    'divide': 'assets/DataSet/Operators/sign-divide.webm',
+    'equals': 'assets/DataSet/Operators/sign-equals.webm',
+    'equal': 'assets/DataSet/Operators/sign-equals.webm',
+    'less than': 'assets/DataSet/Operators/sign-less.than.webm',
+    'greater than': 'assets/DataSet/Operators/sign-more.than.webm',
+    'more than': 'assets/DataSet/Operators/sign-more.than.webm',
+    'dot': 'assets/DataSet/Operators/sign-dot.webm',
+    'point': 'assets/DataSet/Operators/sign-dot.webm',
+    'percent': 'assets/DataSet/Operators/sign-percent.webm',
+    // Math terms from Dictionary folder
+    'algebra': 'assets/DataSet/Dictionary/sign-algebra.webm',
+    'convert': 'assets/DataSet/Dictionary/sign-convert.webm',
+    'decimal number': 'assets/DataSet/Dictionary/sign-decimal-number.webm',
+    'decimal': 'assets/DataSet/Dictionary/sign-decimal-number.webm',
+    'decrease': 'assets/DataSet/Dictionary/sign-decrease.webm',
+    'denominator': 'assets/DataSet/Dictionary/sign-denominator.webm',
+    'equation': 'assets/DataSet/Dictionary/sign-equation.webm',
+    'fraction': 'assets/DataSet/Dictionary/sign-fraction.webm',
+    'fundamental operation': 'assets/DataSet/Dictionary/sign-fundamental-operation.webm',
+    'fundamental': 'assets/DataSet/Dictionary/sign-fundamental-operation.webm',
+    'operation': 'assets/DataSet/Dictionary/sign-fundamental-operation.webm',
+    'greatest': 'assets/DataSet/Dictionary/sign-greatest.webm',
+    'increase': 'assets/DataSet/Dictionary/sign-increase.webm',
+    'least': 'assets/DataSet/Dictionary/sign-least.webm',
+    'math': 'assets/DataSet/Dictionary/sign-math.webm',
+    'mathematics': 'assets/DataSet/Dictionary/sign-math.webm',
+    'number value': 'assets/DataSet/Dictionary/sign-number-value.webm',
+    'value': 'assets/DataSet/Dictionary/sign-number-value.webm',
+    'number': 'assets/DataSet/Dictionary/sign-number.webm',
+    'numerator': 'assets/DataSet/Dictionary/sign-numerator.webm',
   };
+  
+  /// Get all available signs as a dictionary (for dictionary page)
+  static Map<String, String> getAllSigns() {
+    final Map<String, String> allSigns = {};
+    
+    // Add all number signs with labels
+    _onesSigns.forEach((key, value) => allSigns['Number $key'] = value);
+    _tensSigns.forEach((key, value) => allSigns['Number $key'] = value);
+    _hundredsSigns.forEach((key, value) => allSigns['Number $key'] = value);
+    _thousandsSigns.forEach((key, value) => allSigns['Number $key'] = value);
+    
+    // Add operator signs with labels
+    allSigns['Plus (+)'] = _operatorSigns['+']!;
+    allSigns['Minus (-)'] = _operatorSigns['-']!;
+    allSigns['Multiply (×)'] = _operatorSigns['*']!;
+    allSigns['Divide (÷)'] = _operatorSigns['/']!;
+    allSigns['Equals (=)'] = _operatorSigns['=']!;
+    allSigns['Less Than (<)'] = _operatorSigns['<']!;
+    allSigns['Greater Than (>)'] = _operatorSigns['>']!;
+    allSigns['Decimal Point (.)'] = _operatorSigns['.']!;
+    allSigns['Percent (%)'] = _operatorSigns['%']!;
+    
+    return allSigns;
+  }
+  
+  /// Get signs by category
+  static Map<String, String> getSignsByCategory(String category) {
+    switch (category.toLowerCase()) {
+      case 'numbers':
+      case 'ones':
+        return Map.from(_onesSigns);
+      case 'tens':
+        return Map.from(_tensSigns);
+      case 'hundreds':
+        return Map.from(_hundredsSigns);
+      case 'thousands':
+        return Map.from(_thousandsSigns);
+      case 'operators':
+        return Map.from(_operatorSigns);
+      default:
+        return {};
+    }
+  }
 
   /// Translate text to a sequence of sign language videos
   /// Returns a list of video paths to play in order
