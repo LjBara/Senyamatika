@@ -26750,6 +26750,8 @@ class _SignLanguageAvatarScreenState extends State<SignLanguageAvatarScreen> {
         }
       },
       child: Container(
+        width: double.infinity,
+        height: double.infinity,
         color: Colors.white, // White background for video
         child: Stack(
           children: [

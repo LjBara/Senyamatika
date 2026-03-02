@@ -81,15 +81,9 @@ flutter:
     - assets/images/topics.png
     - assets/images/menu.png
     - assets/images/applogo.png
-<<<<<<< Updated upstream
     - assets/Videos/Counting.mp4
     - assets/Videos/Compariso.mp4
-
-=======
-    - assets/videos/Counting.mp4
-    - assets/videos/Compariso.mp4
     - assets/images/whiteboard.png
->>>>>>> Stashed changes
     
   fonts:
     - family: LondrinaSolid
