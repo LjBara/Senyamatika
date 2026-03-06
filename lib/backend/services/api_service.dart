@@ -5,23 +5,22 @@ import 'dart:io';
 
 class ApiService {
   // Local network IP - change this to your computer's IP address
-  // Run configure-network.bat to get your IP
-  static const String _localIP = '192.168.1.59';  // Your WiFi IP address
+  // Run GET_MY_IP.bat to get your IP
+  static const String _localIP = '192.168.1.59';  // Your WiFi IP address for real devices
   
   // Base URL configuration
   static String get baseUrl {
-    if (kDebugMode) {
-      // Development mode - use local network
-      if (Platform.isAndroid || Platform.isIOS) {
-        // Mobile devices use computer's IP address
-        return 'http://$_localIP:3000/api';
-      } else {
-        // Web/Desktop use localhost
-        return 'http://localhost:3000/api';
-      }
+    if (Platform.isAndroid) {
+      // Android emulator/BlueStacks use 10.0.2.2 to access host machine
+      // For real devices, use _localIP
+      return 'http://10.0.2.2:3000/api';  // BlueStacks/Emulator
+      // return 'http://$_localIP:3000/api';  // Real device (uncomment for physical phone)
+    } else if (Platform.isIOS) {
+      // iOS simulator can use localhost
+      return 'http://localhost:3000/api';
     } else {
-      // Production mode - use deployed server
-      return 'https://your-app.onrender.com/api';
+      // Web/Desktop use localhost
+      return 'http://localhost:3000/api';
     }
   }
 

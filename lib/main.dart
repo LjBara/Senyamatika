@@ -26752,7 +26752,16 @@ class _SignLanguageAvatarScreenState extends State<SignLanguageAvatarScreen> {
       child: Container(
         width: double.infinity,
         height: double.infinity,
-        color: Colors.white, // White background for video
+        decoration: BoxDecoration(
+          gradient: LinearGradient(
+            begin: Alignment.topCenter,
+            end: Alignment.bottomCenter,
+            colors: [
+              const Color(0xFFFFF9E6), // Light cream
+              const Color(0xFFFFE5B4), // Peach
+            ],
+          ),
+        ),
         child: Stack(
           children: [
             // ============ Static Video when no input (idle state) ============
