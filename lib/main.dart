@@ -1069,7 +1069,7 @@ class _DashboardScreenState extends State<DashboardScreen>
                   ],
                 ),
                 child: const Text(
-                  'User Name',
+                  'Account Menu',
                   style: TextStyle(
                     fontSize: 22,
                     fontWeight: FontWeight.bold,
@@ -1092,7 +1092,7 @@ class _DashboardScreenState extends State<DashboardScreen>
                   ],
                 ),
                 child: Text(
-                  'user@email.com',
+                  'Manage your account settings',
                   style: TextStyle(
                     fontSize: 14,
                     color: Colors.black87,
@@ -1824,7 +1824,7 @@ class SignDictionaryScreen extends StatelessWidget {
                     Expanded(
                       child: _buildCategoryItem(
                         'Learner',
-                        const Color(0xFFF94144),
+                        const Color.fromARGB(255, 246, 102, 104),
                         onTap: () {
                           Navigator.push(
                             context,
@@ -2020,7 +2020,7 @@ class LearnerDictionaryScreen extends StatelessWidget {
         itemCount: learnerTerms.length,
         itemBuilder: (context, index) {
           final entry = learnerTerms.entries.elementAt(index);
-          return _buildTermCard(context, entry.key, entry.value, const Color(0xFFF94144));
+          return _buildTermCard(context, entry.key, entry.value, const Color.fromARGB(255, 246, 102, 104));
         },
       ),
     );
@@ -2759,7 +2759,7 @@ class _FrontPageScreenState extends State<FrontPageScreen>
   late Animation<Offset> _slideAnimation;
   late Animation<double> _fadeAnimation;
   
-  // ADDED: State for tracking which option is selected
+  // State for tracking which option is selected
   bool _isStudentSelected = false;
   bool _isSenyamatikardSelected = false;
 
@@ -2795,7 +2795,7 @@ class _FrontPageScreenState extends State<FrontPageScreen>
       ),
     );
     
-    // Delay the animation by 1 second (1000ms) then start
+    // Delay the animation by 1.5 seconds then start
     Future.delayed(const Duration(milliseconds: 1500), () {
       if (mounted) {
         _controller.forward();
@@ -2809,7 +2809,7 @@ class _FrontPageScreenState extends State<FrontPageScreen>
     super.dispose();
   }
 
-  // ADDED: Function to handle option selection
+  // Function to handle student selection
   void _selectStudent() {
     setState(() {
       _isStudentSelected = true;
@@ -2817,21 +2817,15 @@ class _FrontPageScreenState extends State<FrontPageScreen>
     });
   }
 
-  // ADDED: Function to handle Senyamatikard selection
-  void _selectSenyamatikard() async {
-    // Launch the Senyamatikard website
-    await _launchSenyamatikard();
-    
-    // Update UI state
-    if (mounted) {
-      setState(() {
-        _isStudentSelected = false;
-        _isSenyamatikardSelected = true;
-      });
-    }
+  // Function to handle teacher selection (Senyamatikard)
+  void _selectSenyamatikard() {
+    setState(() {
+      _isStudentSelected = false;
+      _isSenyamatikardSelected = true;
+    });
   }
 
-  // ADDED: Function to launch Senyamatikard website
+  // Function to launch Senyamatikard website
   Future<void> _launchSenyamatikard() async {
     final Uri url = Uri.parse('https://senyamatikard.figma.site/');
     
@@ -2861,6 +2855,14 @@ class _FrontPageScreenState extends State<FrontPageScreen>
         );
       }
     }
+  }
+
+  // Function to navigate back to main menu
+  void _goBackToMain() {
+    setState(() {
+      _isStudentSelected = false;
+      _isSenyamatikardSelected = false;
+    });
   }
 
   @override
@@ -3016,7 +3018,7 @@ class _FrontPageScreenState extends State<FrontPageScreen>
                     child: Column(
                       mainAxisSize: MainAxisSize.min,
                       children: [
-                        // ADDED: CONDITIONAL RENDERING - Show options first
+                        // CONDITIONAL RENDERING - Show options first
                         if (!_isStudentSelected && !_isSenyamatikardSelected)
                           Column(
                             children: [
@@ -3059,7 +3061,7 @@ class _FrontPageScreenState extends State<FrontPageScreen>
 
                               SizedBox(height: isVerySmallScreen ? 18 : 25),
 
-                              // SENYAMATIKARD BUTTON
+                              // FOR TEACHERS BUTTON (formerly Senyamatikard)
                               SizedBox(
                                 width: double.infinity,
                                 height: isVerySmallScreen
@@ -3082,7 +3084,7 @@ class _FrontPageScreenState extends State<FrontPageScreen>
                                   ),
                                   onPressed: _selectSenyamatikard,
                                   child: Text(
-                                    'Senyamatikard',
+                                    'For Teachers',
                                     style: TextStyle(
                                       fontSize: isVerySmallScreen
                                           ? 17
@@ -3098,7 +3100,7 @@ class _FrontPageScreenState extends State<FrontPageScreen>
                             ],
                           ),
 
-                        // ADDED: SHOW CREATE ACCOUNT AND LOG IN BUTTONS AFTER STUDENT IS SELECTED
+                        // SHOW CREATE ACCOUNT AND LOG IN BUTTONS AFTER STUDENT IS SELECTED
                         if (_isStudentSelected)
                           Column(
                             children: [
@@ -3108,12 +3110,7 @@ class _FrontPageScreenState extends State<FrontPageScreen>
                                 child: Row(
                                   children: [
                                     GestureDetector(
-                                      onTap: () {
-                                        setState(() {
-                                          _isStudentSelected = false;
-                                          _isSenyamatikardSelected = false;
-                                        });
-                                      },
+                                      onTap: _goBackToMain,
                                       child: Container(
                                         decoration: BoxDecoration(
                                           shape: BoxShape.circle,
@@ -3239,7 +3236,7 @@ class _FrontPageScreenState extends State<FrontPageScreen>
                             ],
                           ),
 
-                        // ADDED: SHOW SENYAMATIKARD MESSAGE
+                        // SHOW TEACHER OPTIONS WHEN "FOR TEACHERS" IS SELECTED
                         if (_isSenyamatikardSelected)
                           Column(
                             children: [
@@ -3249,12 +3246,7 @@ class _FrontPageScreenState extends State<FrontPageScreen>
                                 child: Row(
                                   children: [
                                     GestureDetector(
-                                      onTap: () {
-                                        setState(() {
-                                          _isStudentSelected = false;
-                                          _isSenyamatikardSelected = false;
-                                        });
-                                      },
+                                      onTap: _goBackToMain,
                                       child: Container(
                                         decoration: BoxDecoration(
                                           shape: BoxShape.circle,
@@ -3273,7 +3265,7 @@ class _FrontPageScreenState extends State<FrontPageScreen>
                                     ),
                                     const SizedBox(width: 15),
                                     Text(
-                                      'Senyamatikard',
+                                      'Teacher Tools',
                                       style: TextStyle(
                                         fontSize: isVerySmallScreen
                                             ? 20
@@ -3288,7 +3280,7 @@ class _FrontPageScreenState extends State<FrontPageScreen>
                                 ),
                               ),
 
-                              // SENYAMATIKARD INFO MESSAGE
+                              // TEACHER OPTIONS CONTAINER
                               Container(
                                 padding: const EdgeInsets.all(20),
                                 decoration: BoxDecoration(
@@ -3298,52 +3290,126 @@ class _FrontPageScreenState extends State<FrontPageScreen>
                                 ),
                                 child: Column(
                                   children: [
-                                    Icon(
-                                      Icons.info_outline,
-                                      size: 40,
-                                      color: Colors.green[800],
-                                    ),
-                                    const SizedBox(height: 15),
-                                    Text(
-                                      'Senyamatikard Feature',
-                                      textAlign: TextAlign.center,
-                                      style: TextStyle(
-                                        fontSize: isVerySmallScreen
-                                            ? 18
-                                            : isTablet
-                                                ? 26
-                                                : 22,
-                                        fontWeight: FontWeight.bold,
-                                        fontFamily: 'Lora-Regular',
-                                        color: Colors.green[900],
+                                    // Option 1: Sign Language Avatar
+                                    SizedBox(
+                                      width: double.infinity,
+                                      height: isVerySmallScreen
+                                          ? screenHeight * 0.07
+                                          : isTablet
+                                              ? screenHeight * 0.09
+                                              : screenHeight * 0.08,
+                                      child: ElevatedButton(
+                                        style: ElevatedButton.styleFrom(
+                                          backgroundColor: const Color(0xFFA8D5E3),
+                                          foregroundColor: Colors.black,
+                                          elevation: 5,
+                                          shape: RoundedRectangleBorder(
+                                            borderRadius: BorderRadius.circular(18),
+                                            side: const BorderSide(
+                                              color: Colors.black,
+                                              width: 2.5,
+                                            ),
+                                          ),
+                                        ),
+                                        onPressed: () {
+                                          Navigator.push(
+                                            context,
+                                            MaterialPageRoute(
+                                              builder: (context) => const SignLanguageAvatarScreen(),
+                                            ),
+                                          );
+                                        },
+                                        child: Row(
+                                          mainAxisAlignment: MainAxisAlignment.center,
+                                          children: [
+                                            Icon(
+                                              Icons.face,
+                                              size: isVerySmallScreen ? 20 : 24,
+                                            ),
+                                            const SizedBox(width: 10),
+                                            Text(
+                                              'Sign Language Avatar',
+                                              style: TextStyle(
+                                                fontSize: isVerySmallScreen
+                                                    ? 14
+                                                    : isTablet
+                                                        ? 20
+                                                        : 16,
+                                                fontWeight: FontWeight.bold,
+                                                fontFamily: 'Lora-Regular',
+                                              ),
+                                            ),
+                                          ],
+                                        ),
                                       ),
                                     ),
-                                    const SizedBox(height: 10),
-                                    Text(
-                                      'This feature is coming soon!',
-                                      textAlign: TextAlign.center,
-                                      style: TextStyle(
-                                        fontSize: isVerySmallScreen
-                                            ? 14
-                                            : isTablet
-                                                ? 18
-                                                : 16,
-                                        fontFamily: 'Poppins-Regular',
-                                        color: Colors.green[700],
+                                    
+                                    const SizedBox(height: 15),
+
+                                    // Option 2: Senyamatikard Website
+                                    SizedBox(
+                                      width: double.infinity,
+                                      height: isVerySmallScreen
+                                          ? screenHeight * 0.07
+                                          : isTablet
+                                              ? screenHeight * 0.09
+                                              : screenHeight * 0.08,
+                                      child: ElevatedButton(
+                                        style: ElevatedButton.styleFrom(
+                                          backgroundColor: const Color(0xFFFFF59D),
+                                          foregroundColor: Colors.black,
+                                          elevation: 5,
+                                          shape: RoundedRectangleBorder(
+                                            borderRadius: BorderRadius.circular(18),
+                                            side: const BorderSide(
+                                              color: Colors.black,
+                                              width: 2.5,
+                                            ),
+                                          ),
+                                        ),
+                                        onPressed: _launchSenyamatikard,
+                                        child: Row(
+                                          mainAxisAlignment: MainAxisAlignment.center,
+                                          children: [
+                                            Icon(
+                                              Icons.language,
+                                              size: isVerySmallScreen ? 20 : 24,
+                                            ),
+                                            const SizedBox(width: 10),
+                                            Text(
+                                              'Senyamatikard (Web)',
+                                              style: TextStyle(
+                                                fontSize: isVerySmallScreen
+                                                    ? 14
+                                                    : isTablet
+                                                        ? 20
+                                                        : 16,
+                                                fontWeight: FontWeight.bold,
+                                                fontFamily: 'Lora-Regular',
+                                              ),
+                                            ),
+                                          ],
+                                        ),
                                       ),
                                     ),
+
                                     const SizedBox(height: 15),
-                                    Text(
-                                      'Senyamatikard will be a special feature for advanced users.',
-                                      textAlign: TextAlign.center,
-                                      style: TextStyle(
-                                        fontSize: isVerySmallScreen
-                                            ? 12
-                                            : isTablet
-                                                ? 16
-                                                : 14,
-                                        fontFamily: 'Poppins-Regular',
-                                        color: Colors.black87,
+
+                                    // Additional info text
+                                    Container(
+                                      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+                                      decoration: BoxDecoration(
+                                        color: Colors.white.withOpacity(0.7),
+                                        borderRadius: BorderRadius.circular(10),
+                                      ),
+                                      child: Text(
+                                        'Choose a tool to demonstrate sign language or access the web platform.',
+                                        textAlign: TextAlign.center,
+                                        style: TextStyle(
+                                          fontSize: isVerySmallScreen ? 11 : 13,
+                                          fontFamily: 'Poppins-Regular',
+                                          color: Colors.black87,
+                                        ),
                                       ),
                                     ),
                                   ],
@@ -3363,7 +3429,6 @@ class _FrontPageScreenState extends State<FrontPageScreen>
     );
   }
 }
-
 
 // ============ CREATE ACCOUNT SCREEN ============
 class CreateAccountScreen extends StatefulWidget {
@@ -3851,8 +3916,8 @@ class _CreateAccountScreenState extends State<CreateAccountScreen> {
                         
                         // Select Section dropdown
                         _buildDropdownField(
-                          label: 'Select your section:',
-                          hintText: 'Choose your grade and section',
+                          label: 'Grade Level:',
+                          hintText: 'Choose your grade level',
                           prefixIcon: Icons.group,
                           value: _selectedSection,
                           items: _sections.map((section) {
@@ -4166,7 +4231,7 @@ class _CreateAccountScreenState extends State<CreateAccountScreen> {
   }
 }
 
-// ============ LOG IN SCREEN (FIXED VERSION) ============
+// ============ LOG IN SCREEN (WITHOUT PICTURE) ============
 class LogInScreen extends StatefulWidget {
   const LogInScreen({super.key});
 
@@ -4435,69 +4500,23 @@ class _LogInScreenState extends State<LogInScreen> {
                   
                   const SizedBox(height: 30),
                   
-                  // Container for Log In text at Image
-                  SizedBox(
+                  // REMOVED THE IMAGE - Now just the title
+                  Container(
                     width: double.infinity,
-                    child: Stack(
-                      children: [
-                        // "Log In" title - LEFT SIDE - IDINIKIT NA SA IISANG LINE
-                        Row(
-                          crossAxisAlignment: CrossAxisAlignment.center,
-                          children: [
-                            Text(
-                              'Log',
-                              style: TextStyle(
-                                fontSize: 42,
-                                fontWeight: FontWeight.bold,
-                                fontFamily: 'Lora-Regular',
-                                color: Colors.black,
-                              ),
-                            ),
-                            const SizedBox(width: 8), // Maliit na spacing sa pagitan ng "Log" at "In"
-                            Text(
-                              'In',
-                              style: TextStyle(
-                                fontSize: 42,
-                                fontWeight: FontWeight.bold,
-                                fontFamily: 'Lora-Regular',
-                                color: Colors.black,
-                              ),
-                            ),
-                          ],
-                        ),
-                        
-                        // Image na nasa RIGHT SIDE (same child image) - PINALAKI AT INILAPIT SA DIVIDER
-                        Positioned(
-                          top: -25, // Inangat para mas malapit sa divider
-                          right: -5, // Nilapit sa kanang gilid
-                          child: SizedBox(
-                            width: 180, // PINALAKI (mula 120)
-                            height: 180, // PINALAKI (mula 120)
-                            child: Image.asset(
-                              'assets/images/avatar1.png',
-                              fit: BoxFit.contain,
-                              errorBuilder: (context, error, stackTrace) {
-                                return Container(
-                                  color: Colors.transparent,
-                                  child: const Center(
-                                    child: Icon(
-                                      Icons.child_care,
-                                      size: 60, // PINALAKI din ang fallback icon
-                                      color: Colors.black,
-                                    ),
-                                  ),
-                                );
-                              },
-                            ),
-                          ),
-                        ),
-                      ],
+                    child: Text(
+                      'Log In',
+                      style: TextStyle(
+                        fontSize: 42,
+                        fontWeight: FontWeight.bold,
+                        fontFamily: 'Lora-Regular',
+                        color: Colors.black,
+                      ),
                     ),
                   ),
                   
-                  // Divider line na kasabay ng image - NILAPITAN NG IMAGE
+                  // Divider line
                   Container(
-                    margin: const EdgeInsets.only(top: 5, bottom: 30), // Adjusted margin
+                    margin: const EdgeInsets.only(top: 5, bottom: 30),
                     height: 2,
                     color: Colors.grey[300],
                   ),
@@ -5004,7 +5023,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
                             if (UserProvider.getUserSection() != null)
                               const SizedBox(height: 8),
                             if (UserProvider.getUserSection() != null)
-                              _buildInfoRow('Section:', UserProvider.getUserSection()!),
+                              _buildInfoRow('Grade level:', UserProvider.getUserSection()!),
                           ],
                         ),
                       ),
@@ -5285,7 +5304,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
   }
 }
 
-// ============ EDIT PROFILE SCREEN ============
+// ============ FIXED EDIT PROFILE SCREEN - NO DUPLICATE VALUES ============
 class EditProfileScreen extends StatefulWidget {
   const EditProfileScreen({super.key});
 
@@ -5302,36 +5321,22 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
 
   bool _isPasswordVisible = false;
   bool _isConfirmPasswordVisible = false;
+  bool _isLoading = false;
   
-  // List of schools
+  // FIXED: Removed duplicate values - each value is unique now
   final List<String> _schools = [
-    'San Miguel HighSchool',
+    'San Miguel National HighSchool',
     'Bajet-Castillo High School',
-    'Dampol 2nd National High School',
-    'Engr. Virgilio V. Dionisio Memorial High School',
     'Pulong Buhangin National High School'
   ];
   
-  // List of sections (Grade 7-12)
+  // FIXED: Removed duplicates - each grade level appears only once
   final List<String> _sections = [
-    'Grade 7-Section A',
-    'Grade 7-Section B',
-    'Grade 7-Section C',
-    'Grade 8-Section A',
-    'Grade 8-Section B',
-    'Grade 8-Section C',
-    'Grade 9-Section A',
-    'Grade 9-Section B',
-    'Grade 9-Section C',
-    'Grade 10-Section A',
-    'Grade 10-Section B',
-    'Grade 10-Section C',
-    'Grade 11-Section A',
-    'Grade 11-Section B',
-    'Grade 11-Section C',
-    'Grade 12-Section A',
-    'Grade 12-Section B',
-    'Grade 12-Section C',
+    'Grade 7',
+    'Grade 8', 
+    'Grade 9',
+    'Grade 10',
+    'Non-graded',
   ];
   
   String? _selectedSchool;
@@ -5363,12 +5368,12 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
     
     // Set school and section from current user data
     setState(() {
-      _selectedSchool = currentSchool ?? _schools.first;
-      _selectedSection = currentSection ?? _sections.first;
+      _selectedSchool = currentSchool;
+      _selectedSection = currentSection;
     });
   }
 
-  void _saveProfile() {
+  Future<void> _saveProfile() async {
     final firstName = _firstNameController.text.trim();
     final lastName = _lastNameController.text.trim();
     final email = _emailController.text.trim();
@@ -5399,58 +5404,70 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
     }
 
     if (password.isNotEmpty) {
+      if (password.length < 6) {
+        _showErrorSnackbar('Password must be at least 6 characters');
+        return;
+      }
       if (password != confirmPassword) {
         _showErrorSnackbar('Passwords do not match');
         return;
       }
     }
 
-    if (school == null) {
+    if (school == null || school.isEmpty) {
       _showErrorSnackbar('Please select your school');
       return;
     }
 
-    if (section == null) {
-      _showErrorSnackbar('Please select your section');
+    if (section == null || section.isEmpty) {
+      _showErrorSnackbar('Please select your grade level');
       return;
     }
 
-    // Update user data in UserProvider
-    UserProvider.updateUserInfo(
-      name: '$firstName $lastName',
-      email: email,
-      school: school,
-      section: section,
-    );
+    setState(() => _isLoading = true);
 
-    // If password was changed, update it
-    if (password.isNotEmpty) {
-      final currentEmail = UserProvider.getUserEmail();
-      final credentials = UserProvider.getCredentials(currentEmail);
-      if (credentials != null) {
-        credentials['password'] = password;
-        credentials['firstName'] = firstName;
-        credentials['lastName'] = lastName;
-        credentials['school'] = school;
-        credentials['section'] = section;
+    try {
+      // Update user data in UserProvider
+      UserProvider.updateUserInfo(
+        name: '$firstName $lastName',
+        email: email,
+        school: school,
+        section: section,
+      );
+
+      // If password was changed, update it
+      if (password.isNotEmpty) {
+        final currentEmail = UserProvider.getUserEmail();
+        final credentials = UserProvider.getCredentials(currentEmail);
+        if (credentials != null) {
+          credentials['password'] = password;
+        }
+      }
+
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text(
+              'Profile updated successfully!',
+              style: const TextStyle(fontFamily: 'Poppins-Regular', fontWeight: FontWeight.bold),
+            ),
+            backgroundColor: Colors.green,
+            duration: const Duration(seconds: 2),
+          ),
+        );
+
+        Future.delayed(const Duration(milliseconds: 1500), () {
+          if (mounted) {
+            Navigator.pop(context);
+          }
+        });
+      }
+    } catch (e) {
+      if (mounted) {
+        setState(() => _isLoading = false);
+        _showErrorSnackbar('Failed to update profile: $e');
       }
     }
-
-    // Show success message
-    ScaffoldMessenger.of(context).showSnackBar(
-      SnackBar(
-        content: Text(
-          'Profile updated successfully!',
-          style: TextStyle(fontFamily: 'Poppins-Regular', fontWeight: FontWeight.bold),
-        ),
-        backgroundColor: Colors.green,
-        duration: const Duration(seconds: 2),
-      ),
-    );
-
-    Future.delayed(const Duration(milliseconds: 1500), () {
-      Navigator.pop(context);
-    });
   }
 
   void _showErrorSnackbar(String message) {
@@ -5458,7 +5475,7 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
       SnackBar(
         content: Text(
           message,
-          style: TextStyle(fontFamily: 'Poppins-Regular'),
+          style: const TextStyle(fontFamily: 'Poppins-Regular'),
         ),
         backgroundColor: Colors.red,
       ),
@@ -5646,50 +5663,130 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
                         ),
                         const SizedBox(height: 20),
                         
-                        // Select School
-                        _buildDropdownField(
-                          label: 'School:',
-                          hintText: 'Select your school',
-                          prefixIcon: Icons.school,
-                          value: _selectedSchool,
-                          items: _schools.map((school) {
-                            return DropdownMenuItem<String>(
-                              value: school,
-                              child: Text(
-                                school,
-                                style: TextStyle(fontFamily: 'Poppins-Regular'),
+                        // FIXED: School Dropdown with proper initialization
+                        Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            Text(
+                              'School:',
+                              style: TextStyle(
+                                fontSize: 16,
+                                fontWeight: FontWeight.bold,
+                                fontFamily: 'Lora-Regular',
+                                color: Colors.black,
                               ),
-                            );
-                          }).toList(),
-                          onChanged: (value) {
-                            setState(() {
-                              _selectedSchool = value;
-                            });
-                          },
+                            ),
+                            const SizedBox(height: 8),
+                            Container(
+                              decoration: BoxDecoration(
+                                color: const Color(0xFFF8F8F8),
+                                borderRadius: BorderRadius.circular(10),
+                                border: Border.all(color: Colors.black, width: 1),
+                              ),
+                              child: Padding(
+                                padding: const EdgeInsets.symmetric(horizontal: 8),
+                                child: DropdownButtonHideUnderline(
+                                  child: DropdownButton<String>(
+                                    value: _selectedSchool,
+                                    hint: Padding(
+                                      padding: const EdgeInsets.only(left: 8),
+                                      child: Text(
+                                        _selectedSchool ?? 'Select your school',
+                                        style: TextStyle(
+                                          fontFamily: 'Poppins-Regular',
+                                          color: _selectedSchool == null ? Colors.grey[600] : Colors.black,
+                                        ),
+                                      ),
+                                    ),
+                                    icon: const Icon(Icons.arrow_drop_down, color: Colors.black),
+                                    iconSize: 30,
+                                    isExpanded: true,
+                                    style: const TextStyle(
+                                      fontFamily: 'Poppins-Regular',
+                                      fontSize: 16,
+                                      color: Colors.black,
+                                    ),
+                                    items: _schools.map((school) {
+                                      return DropdownMenuItem<String>(
+                                        value: school,
+                                        child: Text(school),
+                                      );
+                                    }).toList(),
+                                    onChanged: _isLoading ? null : (String? newValue) {
+                                      setState(() {
+                                        _selectedSchool = newValue;
+                                      });
+                                    },
+                                  ),
+                                ),
+                              ),
+                            ),
+                          ],
                         ),
+                        
                         const SizedBox(height: 20),
                         
-                        // Select Section
-                        _buildDropdownField(
-                          label: 'Section:',
-                          hintText: 'Select your grade and section',
-                          prefixIcon: Icons.group,
-                          value: _selectedSection,
-                          items: _sections.map((section) {
-                            return DropdownMenuItem<String>(
-                              value: section,
-                              child: Text(
-                                section,
-                                style: TextStyle(fontFamily: 'Poppins-Regular'),
+                        // FIXED: Section Dropdown with proper initialization
+                        Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            Text(
+                              'Grade Level:',
+                              style: TextStyle(
+                                fontSize: 16,
+                                fontWeight: FontWeight.bold,
+                                fontFamily: 'Lora-Regular',
+                                color: Colors.black,
                               ),
-                            );
-                          }).toList(),
-                          onChanged: (value) {
-                            setState(() {
-                              _selectedSection = value;
-                            });
-                          },
+                            ),
+                            const SizedBox(height: 8),
+                            Container(
+                              decoration: BoxDecoration(
+                                color: const Color(0xFFF8F8F8),
+                                borderRadius: BorderRadius.circular(10),
+                                border: Border.all(color: Colors.black, width: 1),
+                              ),
+                              child: Padding(
+                                padding: const EdgeInsets.symmetric(horizontal: 8),
+                                child: DropdownButtonHideUnderline(
+                                  child: DropdownButton<String>(
+                                    value: _selectedSection,
+                                    hint: Padding(
+                                      padding: const EdgeInsets.only(left: 8),
+                                      child: Text(
+                                        _selectedSection ?? 'Select your grade level',
+                                        style: TextStyle(
+                                          fontFamily: 'Poppins-Regular',
+                                          color: _selectedSection == null ? Colors.grey[600] : Colors.black,
+                                        ),
+                                      ),
+                                    ),
+                                    icon: const Icon(Icons.arrow_drop_down, color: Colors.black),
+                                    iconSize: 30,
+                                    isExpanded: true,
+                                    style: const TextStyle(
+                                      fontFamily: 'Poppins-Regular',
+                                      fontSize: 16,
+                                      color: Colors.black,
+                                    ),
+                                    items: _sections.map((section) {
+                                      return DropdownMenuItem<String>(
+                                        value: section,
+                                        child: Text(section),
+                                      );
+                                    }).toList(),
+                                    onChanged: _isLoading ? null : (String? newValue) {
+                                      setState(() {
+                                        _selectedSection = newValue;
+                                      });
+                                    },
+                                  ),
+                                ),
+                              ),
+                            ),
+                          ],
                         ),
+                        
                         const SizedBox(height: 20),
                         
                         // Email
@@ -5749,15 +5846,24 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
                               elevation: 5,
                               shadowColor: Colors.black.withOpacity(0.2),
                             ),
-                            onPressed: _saveProfile,
-                            child: Text(
-                              'Save Changes',
-                              style: TextStyle(
-                                fontSize: 20,
-                                fontWeight: FontWeight.bold,
-                                fontFamily: 'Lora-Regular',
-                              ),
-                            ),
+                            onPressed: _isLoading ? null : _saveProfile,
+                            child: _isLoading
+                                ? const SizedBox(
+                                    height: 20,
+                                    width: 20,
+                                    child: CircularProgressIndicator(
+                                      strokeWidth: 2,
+                                      valueColor: AlwaysStoppedAnimation<Color>(Colors.black),
+                                    ),
+                                  )
+                                : Text(
+                                    'Save Changes',
+                                    style: TextStyle(
+                                      fontSize: 20,
+                                      fontWeight: FontWeight.bold,
+                                      fontFamily: 'Lora-Regular',
+                                    ),
+                                  ),
                           ),
                         ),
                         
@@ -5804,13 +5910,6 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
               color: Colors.black,
               width: 1,
             ),
-            boxShadow: [
-              BoxShadow(
-                color: Colors.black.withOpacity(0.05),
-                blurRadius: 5,
-                offset: const Offset(0, 2),
-              ),
-            ],
           ),
           child: TextField(
             controller: controller,
@@ -5831,76 +5930,6 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
               fontFamily: 'Poppins-Regular',
               fontSize: 16,
               color: Colors.black,
-            ),
-          ),
-        ),
-      ],
-    );
-  }
-
-  Widget _buildDropdownField({
-    required String label,
-    required String hintText,
-    required IconData prefixIcon,
-    required String? value,
-    required List<DropdownMenuItem<String>> items,
-    required Function(String?) onChanged,
-  }) {
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        Text(
-          label,
-          style: TextStyle(
-            fontSize: 16,
-            fontWeight: FontWeight.bold,
-            fontFamily: 'Lora-Regular',
-            color: Colors.black,
-          ),
-        ),
-        const SizedBox(height: 8),
-        Container(
-          decoration: BoxDecoration(
-            color: const Color(0xFFF8F8F8),
-            borderRadius: BorderRadius.circular(10),
-            border: Border.all(
-              color: Colors.black,
-              width: 1,
-            ),
-            boxShadow: [
-              BoxShadow(
-                color: Colors.black.withOpacity(0.05),
-                blurRadius: 5,
-                offset: const Offset(0, 2),
-              ),
-            ],
-          ),
-          child: Padding(
-            padding: const EdgeInsets.symmetric(horizontal: 8),
-            child: DropdownButtonHideUnderline(
-              child: DropdownButton<String>(
-                value: value,
-                hint: Padding(
-                  padding: const EdgeInsets.only(left: 8),
-                  child: Text(
-                    hintText,
-                    style: TextStyle(
-                      fontFamily: 'Poppins-Regular',
-                      color: Colors.grey[600],
-                    ),
-                  ),
-                ),
-                icon: const Icon(Icons.arrow_drop_down, color: Colors.black),
-                iconSize: 30,
-                isExpanded: true,
-                style: TextStyle(
-                  fontFamily: 'Poppins-Regular',
-                  fontSize: 16,
-                  color: Colors.black,
-                ),
-                items: items,
-                onChanged: onChanged,
-              ),
             ),
           ),
         ),
@@ -5936,13 +5965,6 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
               color: Colors.black,
               width: 1,
             ),
-            boxShadow: [
-              BoxShadow(
-                color: Colors.black.withOpacity(0.05),
-                blurRadius: 5,
-                offset: const Offset(0, 2),
-              ),
-            ],
           ),
           child: TextField(
             controller: controller,
@@ -6711,6 +6733,36 @@ class HelpScreen extends StatelessWidget {
               'How do I contact support?',
               'You can reach our support team by emailing senyamatika.bulsu@gmail.com.'
             ),
+
+            _buildFAQItem(
+  'What does the avatar do when I\'m not using it?',
+  'The avatar shows an idle animation. It\'s waiting for you to type or speak something to translate!'
+),
+
+_buildFAQItem(
+  'How do I know which video to watch next?',
+  'Videos are numbered in order. Complete the current video to unlock the next one. You can also see which videos are completed by the green checkmark.'
+),
+
+_buildFAQItem(
+  'How do I change my password?',
+  'Go to Profile → Edit Profile. Enter your new password in the "New Password" field and confirm it. Leave it blank if you don\'t want to change it.'
+),
+
+_buildFAQItem(
+  'How does the Sign Language Avatar work?',
+  'You can type any word or phrase, and the avatar will demonstrate the corresponding sign language. You can also use the microphone button to speak your text.'
+),
+
+_buildFAQItem(
+  'How do I unlock the next topic?',
+  'Topics are unlocked sequentially. You need to complete all lessons in the current topic (watch all videos and pass the exercises) to unlock the next topic.'
+),
+
+_buildFAQItem(
+  'How can I track my learning progress?',
+  'Visit the "Progress" section in your dashboard to see your overall progress, completed lessons, and exercises scores.'
+),
             
             const SizedBox(height: 30),
             
@@ -6743,7 +6795,7 @@ class HelpScreen extends StatelessWidget {
                   ),
                   const SizedBox(height: 15),
                   
-                  _buildContactMethod('Email', 'senyamatika.bulsu@senyamatika.com', Icons.email),
+                  _buildContactMethod('Email', 'senyamatika.bulsu@gmail.com', Icons.email),
                 ],
               ),
             ),
@@ -7095,7 +7147,7 @@ class PrivacyPolicyScreen extends StatelessWidget {
           children: [
             const SizedBox(height: 20),
             Text(
-              'Last Updated: January 2024',
+              'Last Updated: March 2026',
               style: TextStyle(
                 fontSize: 14,
                 fontFamily: 'Poppins-Regular',
@@ -7131,13 +7183,13 @@ class PrivacyPolicyScreen extends StatelessWidget {
             
             _buildPolicySection(
               '6. Your Rights',
-              'You can view, update, or delete your personal information anytime through the app\'s settings.'
+              'You can view, update, or delete the application to also delete your personal information anytime through the app\'s settings.'
             ),
             
             _buildPolicySection(
               '9. Contact Us',
               'If you have any questions about this Privacy Policy:\n\n'
-              'Email: senyamatikasupport@gmail.com\n'
+              'Email: senyamatika.bulsu@gmail.com\n'
             ),
             
             const SizedBox(height: 30),
@@ -7245,7 +7297,7 @@ class TermsOfUseScreen extends StatelessWidget {
           children: [
             const SizedBox(height: 20),
             Text(
-              'Last Updated: January 2024',
+              'Last Updated: March 2026',
               style: TextStyle(
                 fontSize: 14,
                 fontFamily: 'Poppins-Regular',
@@ -7263,7 +7315,7 @@ class TermsOfUseScreen extends StatelessWidget {
             ),
             const SizedBox(height: 15),
             Text(
-              'By using SenyaMatika, you agree to these terms and conditions. Please read them carefully.',
+              'By using SenyaMatika, you agree to the User Responsibility. Please read them carefully.',
               style: TextStyle(
                 fontSize: 16,
                 fontFamily: 'Poppins-Regular',
@@ -7272,7 +7324,7 @@ class TermsOfUseScreen extends StatelessWidget {
             ),
             const SizedBox(height: 20),
             Text(
-              'User Responsibilities',
+              'User Responsibility',
               style: TextStyle(
                 fontSize: 18,
                 fontWeight: FontWeight.bold,
@@ -8180,29 +8232,29 @@ class VideoDataManager {
     'Whole Numbers': [
       {
         'title': 'Count Up To 20',
-        'videoUrl': 'assets/videos/CountUpto20.mp4',
+        'videoUrl': 'assets/Videos/CountUpto20.mp4',
         'description': 'Learn how to count from 1 to 20',
       },
       {
         'title': 'Count Numbers Up to 50 (by 5s and 10s)',
-        'videoUrl': 'assets/videos/CountUpto50.mp4',
+        'videoUrl': 'assets/Videos/CountUpto50.mp4',
         'description': 'Learn to count numbers up to 50',
       },
       {
         'title': 'Count Numbers Up to 100 (by 5s, 10s and 20s)',
-        'videoUrl': 'assets/videos/CountUpto100.mp4',
+        'videoUrl': 'assets/Videos/CountUpto100.mp4',
         'description': 'Learn to count numbers up to 100',
       },
     ],
     'Comparison': [
       {
         'title': 'Compare Groups of Objects',
-        'videoUrl': 'assets/videos/ComparisonPt1.mp4',
+        'videoUrl': 'assets/Videos/ComparisonPt1.mp4',
         'description': 'Compare two groups/sets of objects',
       },
       {
         'title': 'Arrange Numbers in Order',
-        'videoUrl': 'assets/videos/ComparisonPt2.mp4',
+        'videoUrl': 'assets/Videos/ComparisonPt2.mp4',
         'description': 'Arrange objects/numbers from least to greatest',
       },
     ],
@@ -8211,88 +8263,88 @@ class VideoDataManager {
     'Addition': [
       {
         'title': 'Basic Addition Concepts',
-        'videoUrl': 'assets/videos/BasicConcept.mp4',
+        'videoUrl': 'assets/Videos/BasicConcept.mp4',
         'description': 'Illustrate addition as "putting together" or "combining" or "joining sets"',
       },
       {
         'title': 'Adding with Objects',
-        'videoUrl': 'assets/videos/Addobject.mp4',
+        'videoUrl': 'assets/Videos/Addobject.mp4',
         'description': 'Add quantities up to 20 using concrete objects',
       },
       {
         'title': 'Adding One to Two-Digit Numbers',
-        'videoUrl': 'assets/videos/Add1to2.mp4',
+        'videoUrl': 'assets/Videos/Add1to2.mp4',
         'description': 'Add two one to two-digit numbers',
       },
       {
         'title': 'Properties of Addition',
-        'videoUrl': 'assets/videos/AdditionProperty.mp4',
+        'videoUrl': 'assets/Videos/AdditionProperty.mp4',
         'description': 'Illustrate commutative, associative, and identity properties in addition',
       },
       {
         'title': 'Adding Larger Numbers',
-        'videoUrl': 'assets/videos/AddLarge.mp4',
+        'videoUrl': 'assets/Videos/AddLarge.mp4',
         'description': 'Add up to 4-digit numbers with sums up to 1000',
       },
     ],
     'Subtraction': [
       {
         'title': 'Understanding Subtraction',
-        'videoUrl': 'assets/videos/UnderstandSubtract.mp4',
+        'videoUrl': 'assets/Videos/UnderstandSubtract.mp4',
         'description': 'Recognize minus (-) sign that indicates the act of subtracting whole numbers',
       },
       {
         'title': 'Subtracting with Objects',
-        'videoUrl': 'assets/videos/SubtractObject.mp4',
+        'videoUrl': 'assets/Videos/SubtractObject.mp4',
         'description': 'Subtract quantities up to 20 using concrete objects',
       },
       {
         'title': 'Subtracting One to Two-Digit Numbers',
-        'videoUrl': 'assets/videos/Subtract1to2.mp4',
+        'videoUrl': 'assets/Videos/Subtract1to2.mp4',
         'description': 'Subtract two one to two-digit numbers',
       },
       {
         'title': 'Subtracting Larger Numbers',
-        'videoUrl': 'assets/videos/SubtractLarge.mp4',
+        'videoUrl': 'assets/Videos/SubtractLarge.mp4',
         'description': 'Subtract up to 4-digit numbers with minuends up to 1000',
       },
     ],
     'Multiplication': [
       {
         'title': 'Understanding Multiplication',
-        'videoUrl': 'assets/videos/UnderstandMulti.mp4',
+        'videoUrl': 'assets/Videos/UnderstandMulti.mp4',
         'description': 'Illustrate multiplication as repeated addition',
       },
       {
         'title': 'Representing Multiplication',
-        'videoUrl': 'assets/videos/RepresentMulti.mp4',
+        'videoUrl': 'assets/Videos/RepresentMulti.mp4',
         'description': 'Represent multiplication of numbers',
       },
       {
         'title': 'Multiplying Numbers',
-        'videoUrl': 'assets/videos/MultiNumbers.mp4',
+        'videoUrl': 'assets/Videos/MultiNumbers.mp4',
         'description': 'Multiply two one to two-digit numbers',
       },
       {
         'title': 'Properties of Multiplication',
-        'videoUrl': 'assets/videos/MultiProperty.mp4',
+        'videoUrl': 'assets/Videos/MultiProperty.mp4',
         'description': 'Illustrate the properties of multiplication',
       },
     ],
     'Division': [
       {
         'title': 'Understanding Division',
-        'videoUrl': 'assets/videos/Division.mp4',
+        'videoUrl': 'assets/Videos/Division.mp4',
         'description': 'Represents division as equal sharing',
       },
       {
         'title': 'Division as Repeated Subtraction',
-        'videoUrl': 'assets/videos/DivisionRepeated.mp4',
+        'videoUrl': 'assets/Videos/DivisionRepeated.mp4',
         'description': 'Illustrate division as repeated subtraction',
       },
       {
         'title': 'Dividing Numbers',
-        'videoUrl': 'assets/videos/DividingNumbers.mp4',
+        'videoUrl': 'assets/Videos/DividingNumbers.mp4',
         'description': 'Divide two one to two-digit numbers',
       },
     ],
@@ -8301,27 +8353,27 @@ class VideoDataManager {
     'Fraction': [
       {
         'title': 'Recognizing Fractions',
-        'videoUrl': 'assets/videos/FractionsRecognizing.mp4',
+        'videoUrl': 'assets/Videos/FractionsRecognizing.mp4',
         'description': 'Recognize and identify ¼, ½, ¾ of a whole object',
       },
       {
         'title': 'Describing Fractions',
-        'videoUrl': 'assets/videos/FractionsDescribing.mp4',
+        'videoUrl': 'assets/Videos/FractionsDescribing.mp4',
         'description': 'Describe a whole and ¼, ½ and ¾ of a whole',
       },
       {
         'title': 'Reading Fractions',
-        'videoUrl': 'assets/videos/FractionsReading.mp4',
+        'videoUrl': 'assets/Videos/FractionsReading.mp4',
         'description': 'Read fractions correctly',
       },
       {
         'title': 'Comparing Fractions',
-        'videoUrl': 'assets/videos/FractionsComparing.mp4',
+        'videoUrl': 'assets/Videos/FractionsComparing.mp4',
         'description': 'Compare fractions using relation symbols (<, >, =)',
       },
       {
         'title': 'Ordering Fractions',
-        'videoUrl': 'assets/videos/FractionsOrdering.mp4',
+        'videoUrl': 'assets/Videos/FractionsOrdering.mp4',
         'description': 'Arrange fractions in increasing and decreasing order',
       },
     ],
@@ -8330,12 +8382,12 @@ class VideoDataManager {
     'Decimal Numbers': [
       {
         'title': 'Decimal to Fraction Conversion',
-        'videoUrl': 'assets/videos/DecimalstoFraction.mp4',
+        'videoUrl': 'assets/Videos/DecimalstoFraction.mp4',
         'description': 'Convert 0.125, 0.5, 0.75 to fractional form',
       },
       {
         'title': 'Place Value in Decimals',
-        'videoUrl': 'assets/videos/DecimalPlaceValue.mp4',
+        'videoUrl': 'assets/Videos/DecimalPlaceValue.mp4',
         'description': 'Identify the place value of every digit in decimal numbers',
       },
     ],
@@ -8344,17 +8396,17 @@ class VideoDataManager {
     'Percentage': [
       {
         'title': 'Describing Percentage',
-        'videoUrl': 'assets/videos/PercentageDescribing.mp4',
+        'videoUrl': 'assets/Videos/PercentageDescribing.mp4',
         'description': 'Describe percentage as "parts per hundred"',
       },
       {
         'title': 'Converting Fractions to Percentages',
-        'videoUrl': 'assets/videos/Convertingfractionspercentage.mp4',
+        'videoUrl': 'assets/Videos/Convertingfractionspercentage.mp4',
         'description': 'Convert 1/4 (25%) to percentage',
       },
       {
         'title': 'Converting Percentages to Fractions',
-        'videoUrl': 'assets/videos/Percentagestofractions.mp4',
+        'videoUrl': 'assets/Videos/Percentagestofractions.mp4',
         'description': 'Convert 25% to fraction form (1/4)',
       },
     ],
@@ -8363,22 +8415,22 @@ class VideoDataManager {
     'Algebra': [
       {
         'title': 'Missing Values in Addition',
-        'videoUrl': 'assets/videos/AlgebAdd.mp4',
+        'videoUrl': 'assets/Videos/AlgebAdd.mp4',
         'description': 'Find the missing value to complete addition sentences',
       },
       {
         'title': 'Missing Values in Subtraction',
-        'videoUrl': 'assets/videos/AlgebSub.mp4',
+        'videoUrl': 'assets/Videos/AlgebSub.mp4',
         'description': 'Find the missing value to complete subtraction sentences',
       },
       {
         'title': 'Missing Values in Multiplication',
-        'videoUrl': 'assets/videos/AlgebMulti.mp4',
+        'videoUrl': 'assets/Videos/AlgebMulti.mp4',
         'description': 'Find the missing value to complete multiplication sentences',
       },
       {
         'title': 'Missing Values in Division',
-        'videoUrl': 'assets/videos/AlgebDiv.mp4',
+        'videoUrl': 'assets/Videos/AlgebDiv.mp4',
         'description': 'Find the missing value to complete division sentences',
       },
     ],
@@ -8878,7 +8930,6 @@ class TopicsData {
           topicId: 'topic1',
           subtopics: [
             'Count Up To 20',
-            'Identify Numbers Up to 50 (by 5s and 10s)',
             'Count Numbers Up to 50 (by 5s and 10s)',
             'Count Numbers Up to 100 (by 5s, 10s and 20s)',
           ],
@@ -10084,19 +10135,19 @@ class _NumberValuesLessonsScreenState extends State<NumberValuesLessonsScreen> {
       'videos': [
         {
           'title': 'Count Up To 20',
-          'videoUrl': 'assets/videos/CountUpto20.mp4',
+          'videoUrl': 'assets/Videos/CountUpto20.mp4',
           'duration': '3:45',
           'learningObjective': 'Learn to count from 1 to 20',
         },
         {
           'title': 'Count Numbers Up to 50 (by 5s and 10s)',
-          'videoUrl': 'assets/videos/CountUpto50.mp4',
+          'videoUrl': 'assets/Videos/CountUpto50.mp4',
           'duration': '5:15',
           'learningObjective': 'Learn to count numbers up to 50',
         },
         {
           'title': 'Count Numbers Up to 100 (by 5s, 10s and 20s)',
-          'videoUrl': 'assets/videos/CountUpto100.mp4',
+          'videoUrl': 'assets/Videos/CountUpto100.mp4',
           'duration': '6:00',
           'learningObjective': 'Learn to count numbers up to 100',
         },
@@ -10114,13 +10165,13 @@ class _NumberValuesLessonsScreenState extends State<NumberValuesLessonsScreen> {
       'videos': [
         {
           'title': 'Compare Groups of Objects',
-          'videoUrl': 'assets/videos/ComparisonPt1.mp4',
+          'videoUrl': 'assets/Videos/ComparisonPt1.mp4',
           'duration': '4:20',
           'learningObjective': 'Compare two groups/sets of objects',
         },
         {
           'title': 'Arrange Numbers in Order',
-          'videoUrl': 'assets/videos/ComparisonPt2.mp4',
+          'videoUrl': 'assets/Videos/ComparisonPt2.mp4',
           'duration': '5:00',
           'learningObjective': 'Arrange objects/numbers from least to greatest',
         },
@@ -15014,7 +15065,7 @@ class _FundamentalOperationsLessonsScreenState extends State<FundamentalOperatio
           'learningObjectives': [
             'Illustrate addition as "putting together" or "combining" sets',
           ],
-          'videoUrl': 'assets/videos/BasicConcept.mp4',
+          'videoUrl': 'assets/Videos/BasicConcept.mp4',
           'duration': '4:30',
         },
         {
@@ -15022,7 +15073,7 @@ class _FundamentalOperationsLessonsScreenState extends State<FundamentalOperatio
           'learningObjectives': [
             'Add quantities up to 20 using concrete objects',
           ],
-          'videoUrl': 'assets/videos/AddObject.mp4',
+          'videoUrl': 'assets/Videos/AddObject.mp4',
           'duration': '5:15',
         },
         {
@@ -15030,7 +15081,7 @@ class _FundamentalOperationsLessonsScreenState extends State<FundamentalOperatio
           'learningObjectives': [
             'Add two one to two-digit numbers',
           ],
-          'videoUrl': 'assets/videos/Add1to2.mp4',
+          'videoUrl': 'assets/Videos/Add1to2.mp4',
           'duration': '6:00',
         },
         {
@@ -15038,7 +15089,7 @@ class _FundamentalOperationsLessonsScreenState extends State<FundamentalOperatio
           'learningObjectives': [
             'Illustrate commutative, associative, and identity properties',
           ],
-          'videoUrl': 'assets/videos/AdditionProperty.mp4',
+          'videoUrl': 'assets/Videos/AdditionProperty.mp4',
           'duration': '7:30',
         },
         {
@@ -15046,7 +15097,7 @@ class _FundamentalOperationsLessonsScreenState extends State<FundamentalOperatio
           'learningObjectives': [
             'Add up to 4-digit numbers with sums up to 1000',
           ],
-          'videoUrl': 'assets/videos/AddLarge.mp4',
+          'videoUrl': 'assets/Videos/AddLarge.mp4',
           'duration': '8:45',
         },
       ],
@@ -15065,7 +15116,7 @@ class _FundamentalOperationsLessonsScreenState extends State<FundamentalOperatio
           'learningObjectives': [
             'Recognize minus (-) sign that indicates subtracting whole numbers',
           ],
-          'videoUrl': 'assets/videos/UnderstandSubtract.mp4',
+          'videoUrl': 'assets/Videos/UnderstandSubtract.mp4',
           'duration': '4:15',
         },
         {
@@ -15073,7 +15124,7 @@ class _FundamentalOperationsLessonsScreenState extends State<FundamentalOperatio
           'learningObjectives': [
             'Subtract quantities up to 20 using concrete objects',
           ],
-          'videoUrl': 'assets/videos/SubtractObject.mp4',
+          'videoUrl': 'assets/Videos/SubtractObject.mp4',
           'duration': '5:30',
         },
         {
@@ -15081,7 +15132,7 @@ class _FundamentalOperationsLessonsScreenState extends State<FundamentalOperatio
           'learningObjectives': [
             'Subtract two one to two-digit numbers',
           ],
-          'videoUrl': 'assets/videos/Subtract1to2.mp4',
+          'videoUrl': 'assets/Videos/Subtract1to2.mp4',
           'duration': '6:15',
         },
         {
@@ -15089,7 +15140,7 @@ class _FundamentalOperationsLessonsScreenState extends State<FundamentalOperatio
           'learningObjectives': [
             'Subtract up to 4-digit numbers with minuends up to 1000',
           ],
-          'videoUrl': 'assets/videos/SubtractLarge.mp4',
+          'videoUrl': 'assets/Videos/SubtractLarge.mp4',
           'duration': '7:45',
         },
       ],
@@ -15108,7 +15159,7 @@ class _FundamentalOperationsLessonsScreenState extends State<FundamentalOperatio
           'learningObjectives': [
             'Illustrate multiplication as repeated addition',
           ],
-          'videoUrl': 'assets/videos/UnderstandMulti.mp4',
+          'videoUrl': 'assets/Videos/UnderstandMulti.mp4',
           'duration': '5:00',
         },
         {
@@ -15116,7 +15167,7 @@ class _FundamentalOperationsLessonsScreenState extends State<FundamentalOperatio
           'learningObjectives': [
             'Represent multiplication of numbers',
           ],
-          'videoUrl': 'assets/videos/RepresentMulti.mp4',
+          'videoUrl': 'assets/Videos/RepresentMulti.mp4',
           'duration': '5:45',
         },
         {
@@ -15124,7 +15175,7 @@ class _FundamentalOperationsLessonsScreenState extends State<FundamentalOperatio
           'learningObjectives': [
             'Multiply two one to two-digit numbers',
           ],
-          'videoUrl': 'assets/videos/MultiNumbers.mp4',
+          'videoUrl': 'assets/Videos/MultiNumbers.mp4',
           'duration': '6:30',
         },
         {
@@ -15132,7 +15183,7 @@ class _FundamentalOperationsLessonsScreenState extends State<FundamentalOperatio
           'learningObjectives': [
             'Illustrate the properties of multiplication',
           ],
-          'videoUrl': 'assets/videos/MultiProperty.mp4',
+          'videoUrl': 'assets/Videos/MultiProperty.mp4',
           'duration': '7:15',
         },
       ],
@@ -15151,7 +15202,7 @@ class _FundamentalOperationsLessonsScreenState extends State<FundamentalOperatio
           'learningObjectives': [
             'Represents division as equal sharing',
           ],
-          'videoUrl': 'assets/videos/Division.mp4',
+          'videoUrl': 'assets/Videos/Division.mp4',
           'duration': '4:45',
         },
         {
@@ -15159,7 +15210,7 @@ class _FundamentalOperationsLessonsScreenState extends State<FundamentalOperatio
           'learningObjectives': [
             'Illustrate division as repeated subtraction',
           ],
-          'videoUrl': 'assets/videos/DivisionRepeated.mp4',
+          'videoUrl': 'assets/Videos/DivisionRepeated.mp4',
           'duration': '5:30',
         },
         {
@@ -15167,7 +15218,7 @@ class _FundamentalOperationsLessonsScreenState extends State<FundamentalOperatio
           'learningObjectives': [
             'Divide two one to two-digit numbers',
           ],
-          'videoUrl': 'assets/videos/DividingNumbers.mp4',
+          'videoUrl': 'assets/Videos/DividingNumbers.mp4',
           'duration': '6:15',
         },
       ],
@@ -18352,7 +18403,7 @@ class _FractionLessonsScreenState extends State<FractionLessonsScreen> {
           'learningObjectives': [
             'Recognize and identify ¼, ½, ¾ of a whole object',
           ],
-          'videoUrl': 'assets/videos/FractionsRecognizing.mp4',
+          'videoUrl': 'assets/Videos/FractionsRecognizing.mp4',
           'duration': '5:30',
         },
         {
@@ -18360,7 +18411,7 @@ class _FractionLessonsScreenState extends State<FractionLessonsScreen> {
           'learningObjectives': [
             'Describe a whole and ¼, ½ and ¾ of a whole',
           ],
-          'videoUrl': 'assets/videos/FractionsDescribing.mp4',
+          'videoUrl': 'assets/Videos/FractionsDescribing.mp4',
           'duration': '6:15',
         },
         {
@@ -18368,7 +18419,7 @@ class _FractionLessonsScreenState extends State<FractionLessonsScreen> {
           'learningObjectives': [
             'Read fractions correctly',
           ],
-          'videoUrl': 'assets/videos/FractionsReading.mp4',
+          'videoUrl': 'assets/Videos/FractionsReading.mp4',
           'duration': '4:45',
         },
         {
@@ -18376,7 +18427,7 @@ class _FractionLessonsScreenState extends State<FractionLessonsScreen> {
           'learningObjectives': [
             'Compare fractions using relation symbols (<, >, =)',
           ],
-          'videoUrl': 'assets/videos/FractionsComparing.mp4',
+          'videoUrl': 'assets/Videos/FractionsComparing.mp4',
           'duration': '7:30',
         },
         {
@@ -18384,7 +18435,7 @@ class _FractionLessonsScreenState extends State<FractionLessonsScreen> {
           'learningObjectives': [
             'Arrange fractions in increasing and decreasing order',
           ],
-          'videoUrl': 'assets/videos/FractionsOrdering.mp4',
+          'videoUrl': 'assets/Videos/FractionsOrdering.mp4',
           'duration': '8:00',
         },
       ],
@@ -21479,7 +21530,7 @@ class _DecimalNumbersLessonsScreenState extends State<DecimalNumbersLessonsScree
             'Convert 0.125, 0.5, 0.75 to fractional form',
             'Understand the relationship between decimals and fractions',
           ],
-          'videoUrl': 'assets/videos/DecimalstoFraction.mp4',
+          'videoUrl': 'assets/Videos/DecimalstoFraction.mp4',
           'duration': '7:15',
         },
         {
@@ -21488,7 +21539,7 @@ class _DecimalNumbersLessonsScreenState extends State<DecimalNumbersLessonsScree
             'Identify the place value of every digit in decimal numbers',
             'Understand tenths, hundredths, thousandths places',
           ],
-          'videoUrl': 'assets/videos/DecimalPlaceValue.mp4',
+          'videoUrl': 'assets/Videos/DecimalPlaceValue.mp4',
           'duration': '8:00',
         },
       ],
@@ -24131,7 +24182,7 @@ class _PercentageLessonsScreenState extends State<PercentageLessonsScreen> {
             'Describe percentage as "parts per hundred"',
             'Understand that percentage represents a part of a whole',
           ],
-          'videoUrl': 'assets/videos/PercentageDescribing.mp4',
+          'videoUrl': 'assets/Videos/PercentageDescribing.mp4',
           'duration': '5:30',
         },
         {
@@ -24141,7 +24192,7 @@ class _PercentageLessonsScreenState extends State<PercentageLessonsScreen> {
             'Convert 1/2 (50%) to percentage',
             'Convert 3/4 (75%) to percentage',
           ],
-          'videoUrl': 'assets/videos/Convertingfractionspercentage.mp4',
+          'videoUrl': 'assets/Videos/Convertingfractionspercentage.mp4',
           'duration': '7:30',
         },
         {
@@ -24151,7 +24202,7 @@ class _PercentageLessonsScreenState extends State<PercentageLessonsScreen> {
             'Convert 50% to fraction form (1/2)',
             'Convert 75% to fraction form (3/4)',
           ],
-          'videoUrl': 'assets/videos/Percentagestofractions.mp4',
+          'videoUrl': 'assets/Videos/Percentagestofractions.mp4',
           'duration': '7:15',
         },
       ],
@@ -26866,7 +26917,7 @@ class _AlgebraLessonsScreenState extends State<AlgebraLessonsScreen> {
             'Example: 5 + ___ = 12',
             'Example: ___ + 8 = 15',
           ],
-          'videoUrl': 'assets/videos/AlgebAdd.mp4',
+          'videoUrl': 'assets/Videos/AlgebAdd.mp4',
           'duration': '6:30',
         },
         {
@@ -26876,7 +26927,7 @@ class _AlgebraLessonsScreenState extends State<AlgebraLessonsScreen> {
             'Example: 15 - ___ = 7',
             'Example: ___ - 9 = 6',
           ],
-          'videoUrl': 'assets/videos/AlgebSub.mp4',
+          'videoUrl': 'assets/Videos/AlgebSub.mp4',
           'duration': '6:45',
         },
         {
@@ -26886,7 +26937,7 @@ class _AlgebraLessonsScreenState extends State<AlgebraLessonsScreen> {
             'Example: 6 × ___ = 42',
             'Example: ___ × 8 = 56',
           ],
-          'videoUrl': 'assets/videos/AlgebMulti.mp4',
+          'videoUrl': 'assets/Videos/AlgebMulti.mp4',
           'duration': '7:15',
         },
         {
@@ -26896,7 +26947,7 @@ class _AlgebraLessonsScreenState extends State<AlgebraLessonsScreen> {
             'Example: 24 ÷ ___ = 6',
             'Example: ___ ÷ 5 = 9',
           ],
-          'videoUrl': 'assets/videos/AlgebDiv.mp4',
+          'videoUrl': 'assets/Videos/AlgebDiv.mp4',
           'duration': '7:30',
         },
       ],
