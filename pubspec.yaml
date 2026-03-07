@@ -84,7 +84,41 @@ flutter:
     - assets/Videos/Counting.mp4
     - assets/Videos/Compariso.mp4
     - assets/images/whiteboard.png
-    
+    - assets/Videos/CountUpto20.mp4
+    - assets/Videos/CountUpto100.mp4
+    - assets/Videos/CountUpto50.mp4
+    - assets/Videos/ComparisonPt1.mp4
+    - assets/Videos/ComparisonPt2.mp4
+    - assets/Videos/BasicConcept.mp4
+    - assets/Videos/Addobject.mp4
+    - assets/Videos/Add1to2.mp4
+    - assets/Videos/AdditionProperty.mp4
+    - assets/Videos/AddLarge.mp4
+    - assets/Videos/UnderstandSubtract.mp4
+    - assets/Videos/SubtractObject.mp4
+    - assets/Videos/Subtract1to2.mp4
+    - assets/Videos/SubtractLarge.mp4
+    - assets/Videos/UnderstandMulti.mp4
+    - assets/Videos/RepresentMulti.mp4
+    - assets/Videos/MultiNumbers.mp4
+    - assets/Videos/MultiProperty.mp4
+    - assets/Videos/Division.mp4
+    - assets/Videos/DivisionRepeated.mp4
+    - assets/Videos/DividingNumbers.mp4
+    - assets/Videos/FractionsRecognizing.mp4
+    - assets/Videos/FractionsDescribing.mp4
+    - assets/Videos/FractionsReading.mp4
+    - assets/Videos/FractionsComparing.mp4
+    - assets/Videos/FractionsOrdering.mp4
+    - assets/Videos/DecimalstoFraction.mp4
+    - assets/Videos/DecimalPlaceValue.mp4
+    - assets/Videos/PercentageDescribing.mp4
+    - assets/Videos/Convertingfractionspercentage.mp4
+    - assets/Videos/Percentagestofractions.mp4
+    - assets/Videos/AlgebAdd.mp4
+    - assets/Videos/AlgebSub.mp4  
+    - assets/Videos/AlgebMulti.mp4
+    - assets/Videos/AlgebDiv.mp4
   fonts:
     - family: LondrinaSolid
       fonts:
