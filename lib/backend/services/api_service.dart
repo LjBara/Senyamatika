@@ -6,14 +6,14 @@ import 'dart:io';
 class ApiService {
   // Local network IP - change this to your computer's IP address
   // Run GET_MY_IP.bat to get your IP
-  static const String _localIP = '192.168.1.59';  // Your WiFi IP address for real devices
+  static const String _localIP = 'http://192.168.1.138:3000/api';  // Your WiFi IP address for real devices
   
   // Base URL configuration
   static String get baseUrl {
     if (Platform.isAndroid) {
       // Android emulator/BlueStacks use 10.0.2.2 to access host machine
       // For real devices, use _localIP
-      return 'http://10.0.2.2:3000/api';  // BlueStacks/Emulator
+      return 'http://192.168.1.138:3000/api';  // BlueStacks/Emulator
       // return 'http://$_localIP:3000/api';  // Real device (uncomment for physical phone)
     } else if (Platform.isIOS) {
       // iOS simulator can use localhost
