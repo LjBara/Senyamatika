@@ -1,6 +1,8 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/foundation.dart';
 import 'package:video_player/video_player.dart';
 import 'package:speech_to_text/speech_to_text.dart' as stt;
+import 'package:hive_flutter/hive_flutter.dart';
 import 'dart:async';
 import 'dart:math';
 import 'package:url_launcher/url_launcher.dart';
@@ -1277,6 +1279,12 @@ class _DashboardScreenState extends State<DashboardScreen>
       child: InkWell(
         onTap: () {
           _toggleProfileDrawer();
+          
+          // Clear user data on sign out
+          UserProvider.setUser(UserData(name: '', email: ''));
+          
+          // Clear progress manager user (saves progress before clearing)
+          progressManager.setCurrentUser(null);
           
           ScaffoldMessenger.of(context).showSnackBar(
             const SnackBar(
@@ -3638,6 +3646,9 @@ class _CreateAccountScreenState extends State<CreateAccountScreen> {
               section: section,
             ));
 
+            // Set current user for progress tracking
+            progressManager.setCurrentUser(apiResult['data']['user']?['id'] ?? email);
+
             ScaffoldMessenger.of(context).showSnackBar(
               SnackBar(
                 content: Text(
@@ -3681,6 +3692,9 @@ class _CreateAccountScreenState extends State<CreateAccountScreen> {
           school: school,
           section: section,
         ));
+
+        // Set current user for progress tracking
+        progressManager.setCurrentUser(user.uid);
 
         if (mounted) {
           ScaffoldMessenger.of(context).showSnackBar(
@@ -4336,6 +4350,9 @@ class _LogInScreenState extends State<LogInScreen> {
               section: userData['section'],
             ));
 
+            // Set current user for progress tracking
+            progressManager.setCurrentUser(userData['id'] ?? email);
+
             ScaffoldMessenger.of(context).showSnackBar(
               SnackBar(
                 content: Text(
@@ -4376,6 +4393,9 @@ class _LogInScreenState extends State<LogInScreen> {
           school: user.school,
           section: user.section,
         ));
+
+        // Set current user for progress tracking
+        progressManager.setCurrentUser(user.uid);
 
         if (mounted) {
           ScaffoldMessenger.of(context).showSnackBar(
@@ -5247,6 +5267,9 @@ class _ProfileScreenState extends State<ProfileScreen> {
           // Clear user data on sign out
           UserProvider.setUser(UserData(name: '', email: ''));
           
+          // Clear progress manager user (saves progress before clearing)
+          progressManager.setCurrentUser(null);
+          
           ScaffoldMessenger.of(context).showSnackBar(
             SnackBar(
               content: Text(
@@ -5435,14 +5458,28 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
         section: section,
       );
 
-      // If password was changed, update it
+      // If password was changed, update it in LocalAuthService (the actual storage)
       if (password.isNotEmpty) {
-        final currentEmail = UserProvider.getUserEmail();
-        final credentials = UserProvider.getCredentials(currentEmail);
+        final authService = LocalAuthService();
+        await authService.resetPassword(email, password);
+        debugPrint('✅ Password updated successfully in LocalAuthService');
+        
+        // Also update legacy UserProvider for backward compatibility
+        final credentials = UserProvider.getCredentials(email);
         if (credentials != null) {
           credentials['password'] = password;
         }
       }
+
+      // Also update the backend UserProvider
+      final userProvider = Provider.of<backend.UserProvider>(context, listen: false);
+      await userProvider.updateUserInfo(
+        name: '$firstName $lastName',
+        school: school,
+        section: section,
+      );
+
+      setState(() => _isLoading = false);
 
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
@@ -6000,7 +6037,7 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
   }
 }
 
-// ============ UPDATED FORGOT PASSWORD SCREEN ============
+// ============ UPDATED FORGOT PASSWORD SCREEN - ACTUALLY RESETS PASSWORD ============
 class ForgotPasswordScreen extends StatefulWidget {
   const ForgotPasswordScreen({super.key});
 
@@ -6010,61 +6047,114 @@ class ForgotPasswordScreen extends StatefulWidget {
 
 class _ForgotPasswordScreenState extends State<ForgotPasswordScreen> {
   final TextEditingController _emailController = TextEditingController();
+  final TextEditingController _newPasswordController = TextEditingController();
+  final TextEditingController _confirmPasswordController = TextEditingController();
+  bool _emailVerified = false;
+  bool _isLoading = false;
+  bool _isPasswordVisible = false;
+  bool _isConfirmPasswordVisible = false;
 
-  void _sendResetLink() {
+  Future<void> _verifyEmail() async {
     final email = _emailController.text.trim();
 
     if (email.isEmpty) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
-          content: Text(
-            'Please enter your email address',
-            style: TextStyle(fontFamily: 'Poppins-Regular'),
-          ),
-          backgroundColor: Colors.red,
-        ),
-      );
+      _showSnackbar('Please enter your email address', Colors.red);
       return;
     }
 
-    // DAGDAG: Validation para siguraduhing may @gmail.com ang email
     if (!email.endsWith('@gmail.com')) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
-          content: Text(
-            'Please use a valid Gmail address (@gmail.com)',
-            style: TextStyle(fontFamily: 'Poppins-Regular'),
-          ),
-          backgroundColor: Colors.red,
-        ),
-      );
+      _showSnackbar('Please use a valid Gmail address (@gmail.com)', Colors.red);
       return;
     }
 
+    setState(() => _isLoading = true);
+
+    try {
+      // Check if email exists in database
+      final storage = LocalStorageService();
+      final user = await storage.getUserByEmail(email);
+      
+      if (user == null) {
+        _showSnackbar('No account found with this email', Colors.red);
+        setState(() => _isLoading = false);
+        return;
+      }
+
+      // Email verified - show password reset fields
+      setState(() {
+        _emailVerified = true;
+        _isLoading = false;
+      });
+      
+      _showSnackbar('Email verified! Enter your new password.', Colors.green);
+    } catch (e) {
+      setState(() => _isLoading = false);
+      _showSnackbar('Error verifying email: $e', Colors.red);
+    }
+  }
+
+  Future<void> _resetPassword() async {
+    final email = _emailController.text.trim();
+    final newPassword = _newPasswordController.text;
+    final confirmPassword = _confirmPasswordController.text;
+
+    if (newPassword.isEmpty) {
+      _showSnackbar('Please enter a new password', Colors.red);
+      return;
+    }
+
+    if (newPassword.length < 6) {
+      _showSnackbar('Password must be at least 6 characters', Colors.red);
+      return;
+    }
+
+    if (newPassword != confirmPassword) {
+      _showSnackbar('Passwords do not match', Colors.red);
+      return;
+    }
+
+    setState(() => _isLoading = true);
+
+    try {
+      // Reset password using LocalAuthService
+      final authService = LocalAuthService();
+      await authService.resetPassword(email, newPassword);
+
+      _showSnackbar('Password reset successfully!', Colors.green);
+
+      // Navigate back to login after delay
+      Future.delayed(const Duration(milliseconds: 1500), () {
+        if (mounted) {
+          Navigator.pop(context);
+        }
+      });
+    } catch (e) {
+      setState(() => _isLoading = false);
+      _showSnackbar('Error resetting password: $e', Colors.red);
+    }
+  }
+
+  void _showSnackbar(String message, Color color) {
     ScaffoldMessenger.of(context).showSnackBar(
       SnackBar(
         content: Text(
-          'Password reset link sent to your email!',
-          style: TextStyle(fontFamily: 'Poppins-Regular', fontWeight: FontWeight.bold),
+          message,
+          style: const TextStyle(fontFamily: 'Poppins-Regular', fontWeight: FontWeight.bold),
         ),
-        backgroundColor: Colors.green,
+        backgroundColor: color,
         duration: const Duration(seconds: 2),
       ),
     );
-
-    Future.delayed(const Duration(milliseconds: 1500), () {
-      Navigator.pop(context);
-    });
   }
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: Colors.white, // White background
+      backgroundColor: Colors.white,
       body: SafeArea(
         child: Stack(
           children: [
-            // Background decorative elements (same as CreateAccountScreen)
+            // Background decorative elements
             Positioned(
               top: -50,
               right: -50,
@@ -6095,7 +6185,7 @@ class _ForgotPasswordScreenState extends State<ForgotPasswordScreen> {
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  // Back button at top left
+                  // Back button
                   Container(
                     decoration: BoxDecoration(
                       shape: BoxShape.circle,
@@ -6109,11 +6199,11 @@ class _ForgotPasswordScreenState extends State<ForgotPasswordScreen> {
                   ),
                   const SizedBox(height: 20),
                   
-                  // Welcome text - CENTERED
+                  // Title
                   Center(
                     child: Text(
-                      'Forgot Password?',
-                      style: TextStyle(
+                      _emailVerified ? 'Reset Password' : 'Forgot Password?',
+                      style: const TextStyle(
                         fontSize: 28,
                         fontWeight: FontWeight.bold,
                         fontFamily: 'Lora-Regular',
@@ -6124,10 +6214,12 @@ class _ForgotPasswordScreenState extends State<ForgotPasswordScreen> {
                   
                   const SizedBox(height: 10),
                   
-                  // Instruction text - CENTERED
+                  // Instruction text
                   Center(
                     child: Text(
-                      'Enter your Gmail to reset your password',
+                      _emailVerified 
+                          ? 'Enter your new password below'
+                          : 'Enter your Gmail to reset your password',
                       style: TextStyle(
                         fontSize: 18,
                         fontFamily: 'Poppins-Regular',
@@ -6138,18 +6230,17 @@ class _ForgotPasswordScreenState extends State<ForgotPasswordScreen> {
                   
                   const SizedBox(height: 30),
                   
-                  // Container for Forgot Password text
+                  // Title text
                   SizedBox(
                     width: double.infinity,
                     child: Stack(
                       children: [
-                        // "Forgot Password" title - LEFT SIDE
                         Column(
                           crossAxisAlignment: CrossAxisAlignment.start,
                           children: [
                             Text(
-                              'Forgot',
-                              style: TextStyle(
+                              _emailVerified ? 'New' : 'Forgot',
+                              style: const TextStyle(
                                 fontSize: 42,
                                 fontWeight: FontWeight.bold,
                                 fontFamily: 'Lora-Regular',
@@ -6159,7 +6250,7 @@ class _ForgotPasswordScreenState extends State<ForgotPasswordScreen> {
                             ),
                             Text(
                               'Password',
-                              style: TextStyle(
+                              style: const TextStyle(
                                 fontSize: 42,
                                 fontWeight: FontWeight.bold,
                                 fontFamily: 'Lora-Regular',
@@ -6169,8 +6260,6 @@ class _ForgotPasswordScreenState extends State<ForgotPasswordScreen> {
                             ),
                           ],
                         ),
-                        
-                        // Image na nasa RIGHT SIDE (same child image)
                         Positioned(
                           top: -10,
                           right: 0,
@@ -6181,16 +6270,7 @@ class _ForgotPasswordScreenState extends State<ForgotPasswordScreen> {
                               'assets/images/child_hello.png',
                               fit: BoxFit.contain,
                               errorBuilder: (context, error, stackTrace) {
-                                return Container(
-                                  color: Colors.transparent,
-                                  child: const Center(
-                                    child: Icon(
-                                      Icons.child_care,
-                                      size: 40,
-                                      color: Colors.black,
-                                    ),
-                                  ),
-                                );
+                                return const Icon(Icons.child_care, size: 40, color: Colors.black);
                               },
                             ),
                           ),
@@ -6201,7 +6281,7 @@ class _ForgotPasswordScreenState extends State<ForgotPasswordScreen> {
                   
                   const SizedBox(height: 30),
                   
-                  // Forgot Password card (BOX NA KULAY B0BDC1 - same as others)
+                  // Form card
                   Container(
                     width: double.infinity,
                     padding: const EdgeInsets.all(25),
@@ -6220,20 +6300,44 @@ class _ForgotPasswordScreenState extends State<ForgotPasswordScreen> {
                     child: Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
-                        // Form fields
+                        // Email field (always shown)
                         _buildTextField(
                           controller: _emailController,
                           label: 'Gmail Address:',
                           hintText: 'Enter your Gmail address (@gmail.com)',
                           prefixIcon: Icons.email,
                           keyboardType: TextInputType.emailAddress,
+                          enabled: !_emailVerified,
                         ),
-                        const SizedBox(height: 30),
+                        
+                        // Password fields (shown after email verification)
+                        if (_emailVerified) ...[
+                          const SizedBox(height: 20),
+                          _buildPasswordField(
+                            controller: _newPasswordController,
+                            label: 'New Password:',
+                            hintText: 'Enter new password (min 6 characters)',
+                            isVisible: _isPasswordVisible,
+                            onToggle: () => setState(() => _isPasswordVisible = !_isPasswordVisible),
+                          ),
+                          const SizedBox(height: 20),
+                          _buildPasswordField(
+                            controller: _confirmPasswordController,
+                            label: 'Confirm Password:',
+                            hintText: 'Confirm your new password',
+                            isVisible: _isConfirmPasswordVisible,
+                            onToggle: () => setState(() => _isConfirmPasswordVisible = !_isConfirmPasswordVisible),
+                          ),
+                        ],
+                        
+                        const SizedBox(height: 20),
                         
                         // Description text
                         Text(
-                          'We\'ll send you a link to reset your password.',
-                          style: TextStyle(
+                          _emailVerified 
+                              ? 'Your password will be updated immediately.'
+                              : 'We\'ll verify your email and let you set a new password.',
+                          style: const TextStyle(
                             fontSize: 14,
                             fontFamily: 'Poppins-Regular',
                             color: Colors.black87,
@@ -6242,7 +6346,7 @@ class _ForgotPasswordScreenState extends State<ForgotPasswordScreen> {
                         
                         const SizedBox(height: 35),
                         
-                        // Send Reset Link Button
+                        // Action Button
                         SizedBox(
                           width: double.infinity,
                           height: 55,
@@ -6252,23 +6356,30 @@ class _ForgotPasswordScreenState extends State<ForgotPasswordScreen> {
                               foregroundColor: Colors.black,
                               shape: RoundedRectangleBorder(
                                 borderRadius: BorderRadius.circular(12),
-                                side: const BorderSide(
-                                  color: Colors.black,
-                                  width: 2,
-                                ),
+                                side: const BorderSide(color: Colors.black, width: 2),
                               ),
                               elevation: 5,
-                              shadowColor: Colors.black.withOpacity(0.2),
                             ),
-                            onPressed: _sendResetLink,
-                            child: Text(
-                              'Send Reset Link',
-                              style: TextStyle(
-                                fontSize: 20,
-                                fontWeight: FontWeight.bold,
-                                fontFamily: 'Lora-Regular',
-                              ),
-                            ),
+                            onPressed: _isLoading 
+                                ? null 
+                                : (_emailVerified ? _resetPassword : _verifyEmail),
+                            child: _isLoading
+                                ? const SizedBox(
+                                    width: 24,
+                                    height: 24,
+                                    child: CircularProgressIndicator(
+                                      strokeWidth: 2,
+                                      valueColor: AlwaysStoppedAnimation<Color>(Colors.black),
+                                    ),
+                                  )
+                                : Text(
+                                    _emailVerified ? 'Reset Password' : 'Verify Email',
+                                    style: const TextStyle(
+                                      fontSize: 20,
+                                      fontWeight: FontWeight.bold,
+                                      fontFamily: 'Lora-Regular',
+                                    ),
+                                  ),
                           ),
                         ),
                         
@@ -6277,10 +6388,8 @@ class _ForgotPasswordScreenState extends State<ForgotPasswordScreen> {
                         // Back to Log In
                         Center(
                           child: TextButton(
-                            onPressed: () {
-                              Navigator.pop(context);
-                            },
-                            child: Text(
+                            onPressed: () => Navigator.pop(context),
+                            child: const Text(
                               'Back to Log In',
                               style: TextStyle(
                                 fontSize: 16,
@@ -6311,13 +6420,58 @@ class _ForgotPasswordScreenState extends State<ForgotPasswordScreen> {
     required String hintText,
     required IconData prefixIcon,
     TextInputType keyboardType = TextInputType.text,
+    bool enabled = true,
   }) {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         Text(
           label,
-          style: TextStyle(
+          style: const TextStyle(
+            fontSize: 16,
+            fontWeight: FontWeight.bold,
+            fontFamily: 'Lora-Regular',
+            color: Colors.black,
+          ),
+        ),
+        const SizedBox(height: 8),
+        Container(
+          decoration: BoxDecoration(
+            color: enabled ? const Color(0xFFF8F8F8) : Colors.grey[300],
+            borderRadius: BorderRadius.circular(10),
+            border: Border.all(color: Colors.black, width: 1),
+          ),
+          child: TextField(
+            controller: controller,
+            keyboardType: keyboardType,
+            enabled: enabled,
+            decoration: InputDecoration(
+              contentPadding: const EdgeInsets.symmetric(horizontal: 15, vertical: 18),
+              hintText: hintText,
+              hintStyle: TextStyle(fontFamily: 'Poppins-Regular', color: Colors.grey[600]),
+              border: InputBorder.none,
+              prefixIcon: Icon(prefixIcon, color: Colors.black),
+            ),
+            style: const TextStyle(fontFamily: 'Poppins-Regular', fontSize: 16, color: Colors.black),
+          ),
+        ),
+      ],
+    );
+  }
+
+  Widget _buildPasswordField({
+    required TextEditingController controller,
+    required String label,
+    required String hintText,
+    required bool isVisible,
+    required VoidCallback onToggle,
+  }) {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Text(
+          label,
+          style: const TextStyle(
             fontSize: 16,
             fontWeight: FontWeight.bold,
             fontFamily: 'Lora-Regular',
@@ -6329,38 +6483,23 @@ class _ForgotPasswordScreenState extends State<ForgotPasswordScreen> {
           decoration: BoxDecoration(
             color: const Color(0xFFF8F8F8),
             borderRadius: BorderRadius.circular(10),
-            border: Border.all(
-              color: Colors.black,
-              width: 1,
-            ),
-            boxShadow: [
-              BoxShadow(
-                color: Colors.black.withOpacity(0.05),
-                blurRadius: 5,
-                offset: const Offset(0, 2),
-              ),
-            ],
+            border: Border.all(color: Colors.black, width: 1),
           ),
           child: TextField(
             controller: controller,
-            keyboardType: keyboardType,
+            obscureText: !isVisible,
             decoration: InputDecoration(
               contentPadding: const EdgeInsets.symmetric(horizontal: 15, vertical: 18),
               hintText: hintText,
-              hintStyle: TextStyle(
-                fontFamily: 'Poppins-Regular',
-                color: Colors.grey[600],
-              ),
+              hintStyle: TextStyle(fontFamily: 'Poppins-Regular', color: Colors.grey[600]),
               border: InputBorder.none,
-              prefixIcon: Icon(prefixIcon, color: Colors.black),
-              filled: true,
-              fillColor: Colors.transparent,
+              prefixIcon: const Icon(Icons.lock, color: Colors.black),
+              suffixIcon: IconButton(
+                icon: Icon(isVisible ? Icons.visibility : Icons.visibility_off, color: Colors.black),
+                onPressed: onToggle,
+              ),
             ),
-            style: TextStyle(
-              fontFamily: 'Poppins-Regular',
-              fontSize: 16,
-              color: Colors.black,
-            ),
+            style: const TextStyle(fontFamily: 'Poppins-Regular', fontSize: 16, color: Colors.black),
           ),
         ),
       ],
@@ -7406,14 +7545,23 @@ class _SignLanguageAvatarScreenState extends State<SignLanguageAvatarScreen> {
     // Translate to sign language sequence
     final sequence = SignLanguageService.translateToSignSequence(text);
     
+    // PERFORMANCE FIX: Limit to max 8 signs to prevent lag/freeze on lower-end devices
+    const int maxSigns = 8;
+    final limitedSequence = sequence.length > maxSigns 
+        ? sequence.sublist(0, maxSigns) 
+        : sequence;
+    
     if (mounted) {
       setState(() {
-        _signSequence = sequence;
+        _signSequence = limitedSequence;
         _isTranslating = false;
       });
       
-      if (sequence.isNotEmpty) {
-        _translationMessage = 'Loading ${sequence.length} sign(s)...';
+      if (limitedSequence.isNotEmpty) {
+        final truncatedMsg = sequence.length > maxSigns 
+            ? ' (showing first $maxSigns of ${sequence.length})' 
+            : '';
+        _translationMessage = 'Loading ${limitedSequence.length} sign(s)...$truncatedMsg';
         setState(() {});
         
         // Preload ALL videos first
@@ -7421,7 +7569,7 @@ class _SignLanguageAvatarScreenState extends State<SignLanguageAvatarScreen> {
         
         if (mounted && _preloadedControllers.isNotEmpty) {
           setState(() {
-            _translationMessage = 'Playing ${sequence.length} sign(s) for: "$text"';
+            _translationMessage = 'Playing ${limitedSequence.length} sign(s) for: "$text"$truncatedMsg';
           });
           _playSignSequence();
         }
@@ -8465,38 +8613,103 @@ class VideoDataManager {
   }
 }
 
-// ============ UPDATED PROGRESS MANAGER WITH ALL FIXES ============
+// ============ UPDATED PROGRESS MANAGER WITH PERSISTENCE ============
 class ProgressManager {
   static final ProgressManager _instance = ProgressManager._internal();
   factory ProgressManager() => _instance;
   ProgressManager._internal();
 
   Map<String, Map<String, dynamic>> _progressData = {};
+  String? _currentUserId;
+  bool _isInitialized = false;
   
   final _unlockController = StreamController<String>.broadcast();
   Stream<String> get unlockStream => _unlockController.stream;
 
+  // Set current user ID for progress tracking
+  void setCurrentUser(String? userId) {
+    if (_currentUserId != userId) {
+      // Save current progress before switching users
+      if (_currentUserId != null && _isInitialized) {
+        _saveProgressToStorage();
+      }
+      _currentUserId = userId;
+      _isInitialized = false;
+      _progressData = {};
+      if (userId != null) {
+        _loadProgressFromStorage();
+      }
+    }
+  }
+
+  // Load progress from Hive storage
+  Future<void> _loadProgressFromStorage() async {
+    if (_currentUserId == null) return;
+    
+    try {
+      final box = Hive.box('settings');
+      final savedData = box.get('progress_$_currentUserId');
+      
+      if (savedData != null) {
+        _progressData = Map<String, Map<String, dynamic>>.from(
+          (savedData as Map).map((key, value) => 
+            MapEntry(key.toString(), Map<String, dynamic>.from(value as Map))
+          )
+        );
+        debugPrint('✅ Loaded progress for user: $_currentUserId');
+      } else {
+        _initializeEmptyProgress();
+      }
+      _isInitialized = true;
+    } catch (e) {
+      debugPrint('⚠️ Error loading progress: $e');
+      _initializeEmptyProgress();
+      _isInitialized = true;
+    }
+  }
+
+  // Save progress to Hive storage
+  Future<void> _saveProgressToStorage() async {
+    if (_currentUserId == null) return;
+    
+    try {
+      final box = Hive.box('settings');
+      await box.put('progress_$_currentUserId', _progressData);
+      debugPrint('💾 Saved progress for user: $_currentUserId');
+    } catch (e) {
+      debugPrint('⚠️ Error saving progress: $e');
+    }
+  }
+
+  void _initializeEmptyProgress() {
+    _progressData = {
+      'video_lessons': {},
+      'exercises': {},
+      'subtopic_completion': {},
+      'lesson_completion': {},
+      'topic_completion': {},
+      'topic_unlock': {
+        'Number Values': {'unlocked': true}
+      },
+      'overall_stats': {
+        'total_videos_watched': 0,
+        'total_exercises_completed': 0,
+        'total_score': 0,
+        'average_score': 0.0,
+        'total_questions_answered': 0,
+        'correct_answers': 0,
+        'progress_percentage': 0,
+      }
+    };
+  }
+
   void initialize() {
     if (_progressData.isEmpty) {
-      _progressData = {
-        'video_lessons': {},
-        'exercises': {},
-        'subtopic_completion': {},
-        'lesson_completion': {},
-        'topic_completion': {}, // For tracking completed topics
-        'topic_unlock': {
-          'Number Values': {'unlocked': true}
-        },
-        'overall_stats': {
-          'total_videos_watched': 0,
-          'total_exercises_completed': 0,
-          'total_score': 0,
-          'average_score': 0.0,
-          'total_questions_answered': 0,
-          'correct_answers': 0,
-          'progress_percentage': 0,
-        }
-      };
+      if (_currentUserId != null && !_isInitialized) {
+        _loadProgressFromStorage();
+      } else {
+        _initializeEmptyProgress();
+      }
     }
   }
 
@@ -8523,6 +8736,7 @@ class ProgressManager {
     }
     
     _updateProgressPercentage();
+    _saveProgressToStorage(); // Persist changes
   }
 
   // ============ SUBTOPIC COMPLETION METHODS ============
@@ -8544,6 +8758,7 @@ class ProgressManager {
         'status': 'completed',
         'type': 'video'
       };
+      _saveProgressToStorage(); // Persist changes
     }
   }
 
@@ -8588,6 +8803,7 @@ class ProgressManager {
         'completed_at': now.toIso8601String(),
         'status': 'completed',
       };
+      _saveProgressToStorage(); // Persist changes
     }
   }
 
@@ -8677,6 +8893,7 @@ class ProgressManager {
       'topic_name': topicName,
       'completed_at': now.toIso8601String(),
     };
+    _saveProgressToStorage(); // Persist changes
   }
 
   bool isTopicCompleted(String topicName) {
@@ -8710,6 +8927,7 @@ class ProgressManager {
     };
     
     _unlockController.add(topicName);
+    _saveProgressToStorage(); // Persist changes
   }
 
   // ============ EXERCISE METHODS ============
@@ -8749,6 +8967,7 @@ class ProgressManager {
         totalExercises > 0 ? (totalScore / totalExercises).toDouble() : 0.0;
     
     _updateProgressPercentage();
+    _saveProgressToStorage(); // Persist changes
   }
 
   List<Map<String, dynamic>> getExerciseScoresByLesson(String lessonName) {
@@ -8846,25 +9065,8 @@ class ProgressManager {
   }
 
   void clearAllProgress() {
-    _progressData = {
-      'video_lessons': {},
-      'exercises': {},
-      'subtopic_completion': {},
-      'lesson_completion': {},
-      'topic_completion': {},
-      'topic_unlock': {
-        'Number Values': {'unlocked': true}
-      },
-      'overall_stats': {
-        'total_videos_watched': 0,
-        'total_exercises_completed': 0,
-        'total_score': 0,
-        'average_score': 0.0,
-        'total_questions_answered': 0,
-        'correct_answers': 0,
-        'progress_percentage': 0,
-      }
-    };
+    _initializeEmptyProgress();
+    _saveProgressToStorage(); // Clear from storage too
   }
 
   void _updateProgressPercentage() {

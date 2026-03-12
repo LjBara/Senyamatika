@@ -1,27 +1,15 @@
 import 'dart:convert';
 import 'package:http/http.dart' as http;
 import 'package:flutter/foundation.dart';
-import 'dart:io';
 
 class ApiService {
-  // Local network IP - change this to your computer's IP address
-  // Run GET_MY_IP.bat to get your IP
-  static const String _localIP = '192.168.1.59';  // Your WiFi IP address for real devices
+  // Your WiFi IP address for physical device testing
+  static const String _localIP = '192.168.1.59';
   
   // Base URL configuration
   static String get baseUrl {
-    if (Platform.isAndroid) {
-      // Android emulator/BlueStacks use 10.0.2.2 to access host machine
-      // For real devices, use _localIP
-      return 'http://10.0.2.2:3000/api';  // BlueStacks/Emulator
-      // return 'http://$_localIP:3000/api';  // Real device (uncomment for physical phone)
-    } else if (Platform.isIOS) {
-      // iOS simulator can use localhost
-      return 'http://localhost:3000/api';
-    } else {
-      // Web/Desktop use localhost
-      return 'http://localhost:3000/api';
-    }
+    // For APK release on physical device - use your WiFi IP
+    return 'http://$_localIP:3001/api';
   }
 
   static String? _token;
